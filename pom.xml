@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>jahia-modules</artifactId>
+        <groupId>org.jahia.modules</groupId>
+        <version>7.2.3.0</version>
+    </parent>
+    <groupId>org.jahia.modules</groupId>
+    <artifactId>full-read-only-notifier</artifactId>
+    <name>Full Read Only Notifier</name>
+    <version>1.0.0-SNAPSHOT</version>    
+    <packaging>bundle</packaging>
+    <description>This is the custom module (full-read-only-notifier) for running on a Digital Experience Manager server.</description>
+
+    <scm>
+        <connection>scm:git:git@github.com:Jahia/full-read-only-notifier.git</connection>
+        <developerConnection>scm:git:git@github.com:Jahia/full-read-only-notifier.git</developerConnection>
+        <url>https://github.com/Jahia/full-read-only-notifier</url>
+        <tag>HEAD</tag>
+    </scm>
+    
+    <distributionManagement>
+        <repository>
+            <id>oauth-releases</id>
+            <url>https://devtools.jahia.com/nexus/content/repositories/jahia-community-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>oauth-snapshots</id>
+            <url>https://devtools.jahia.com/nexus/content/repositories/jahia-community-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>jahia-public</id>
+            <name>Jahia Public Repository</name>
+            <url>https://devtools.jahia.com/nexus/content/groups/public</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>community-snapshots</id>
+            <name>Jahia Community Snapshots</name>
+            <url>https://devtools.jahia.com/nexus/content/repositories/jahia-community-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>community-releases</id>
+            <name>Jahia Community Releases</name>
+            <url>https://devtools.jahia.com/nexus/content/repositories/jahia-community-releases/</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Jahia-Depends>default</Jahia-Depends>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
