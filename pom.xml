@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jahia-modules</artifactId>
         <groupId>org.jahia.modules</groupId>
-        <version>7.2.3.2</version>
+        <version>7.2.3.1</version>
     </parent>
     <groupId>org.jahia.modules</groupId>
     <artifactId>full-read-only-notifier</artifactId>
