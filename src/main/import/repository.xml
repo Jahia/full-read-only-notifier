@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<content xmlns:j="http://www.jahia.org/jahia/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0">
+    <modules jcr:primaryType="jnt:modules">
+        <full-read-only-notifier j:dependencies="default"
+                                 j:modulePriority="0"
+                                 j:moduleType="module"
+                                 j:title="Full Read-Only Notifier"
+                                 jcr:primaryType="jnt:module">           
+            <portlets jcr:primaryType="jnt:portletFolder"/>
+            <files jcr:primaryType="jnt:folder"/>
+            <contents jcr:primaryType="jnt:contentFolder"/>
+            <templates j:rootTemplatePath="/base" jcr:primaryType="jnt:templatesFolder">
+                <files jcr:primaryType="jnt:folder">
+                    <full-read-only-notifier.png j:height="16"
+                                                 j:width="16"
+                                                 jcr:mixinTypes="jmix:image"
+                                                 jcr:primaryType="jnt:file">
+                        <jcr:content jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
+                    </full-read-only-notifier.png>
+                </files>
+                <contents jcr:primaryType="jnt:contentFolder"/>
+                <site-settings-base j:view="siteSettings"
+                                    jcr:mixinTypes="jmix:useUILocale"
+                                    jcr:primaryType="jnt:template">
+                    <fullReadOnlyNotifierManager j:applyOn="jnt:virtualsite"
+                                                 j:defaultTemplate="false"
+                                                 j:hiddenTemplate="true"
+                                                 j:priority="100"
+                                                 j:requiredPermissionNames="siteAdminFullReadOnlyNotifier"
+                                                 j:titleKey="siteSettings.label.fullReadOnlyNotifierManager"
+                                                 jcr:mixinTypes="jmix:rbTitle"
+                                                 jcr:primaryType="jnt:contentTemplate">
+                        <pagecontent jcr:primaryType="jnt:contentList">
+                            <fullReadOnlyNotifier-manager jcr:primaryType="jnt:siteSettingsManageFullReadOnlyNotifier">
+                                <j:translation_en jcr:language="en"
+                                                  jcr:mixinTypes="mix:title"
+                                                  jcr:primaryType="jnt:translation"
+                                                  jcr:title="Full-read only notifier manager"/>
+                            </fullReadOnlyNotifier-manager>
+                        </pagecontent>
+                    </fullReadOnlyNotifierManager>
+                </site-settings-base>
+            </templates>
+        </full-read-only-notifier>
+    </modules>
+</content>

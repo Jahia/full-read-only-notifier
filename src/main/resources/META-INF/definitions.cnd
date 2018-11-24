@@ -3,3 +3,12 @@
 
 [jnt:full_read_only_notifier] > jnt:content, jmix:siteComponent
 
+[jnt:fronotifier] > jnt:content, jmix:autoPublish
+ - content_off (string)
+ - content_on (string)
+
+//---------------------------------------------------------
+// Full Read-Only Notifier Administration
+//---------------------------------------------------------
+
+[jnt:siteSettingsManageFullReadOnlyNotifier] > jnt:content, mix:title, jmix:studioOnly, jmix:siteComponent

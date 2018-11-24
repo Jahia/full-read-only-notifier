@@ -63,41 +63,58 @@
      *
      * @param {string} cookieName the name of the cookie to rename
      */
-        function removeCookie(cookieName) {
-            'use strict';
-            setCookie(cookieName, '', -1);
-        }
+    function removeCookie(cookieName) {
+        'use strict';
+        setCookie(cookieName, '', -1);
+    }
 </script>
+
+<c:set var="fronotifier" value="${jcr:getChildrenOfType(siteNode,'jnt:fronotifier')}"/>
+<fmt:message key='full_read_only_notifier.on.notification' var="content_on"/>
+<fmt:message key='full_read_only_notifier.off.notification' var="content_off"/>
+
+<c:set var="siteNode" value="${renderContext.site}"/>
+<c:forEach items="${jcr:getChildrenOfType(siteNode, 'jnt:fronotifier')}" var="fronotifier" varStatus="status">
+    <c:if test="${fronotifier.properties['content_off'] ne ''}">
+        <c:set var="content_off" value="${fronotifier.properties['content_off']}"/>
+    </c:if>
+
+    <c:if test="${fronotifier.properties['content_on'] ne ''}">
+        <c:set var="content_on" value="${fronotifier.properties['content_on']}"/>
+    </c:if>    
+</c:forEach>
+
 <c:choose>
     <c:when test="${renderContext.readOnlyStatus eq 'OFF'}">
         <script type="text/javascript">
             $(document).ready(function () {
-            var cookie = getCookie('full_read_only');
-            
-            if (cookie !== null) {
-                $.notify("<fmt:message key='full_read_only_notifier.off.notification'/>", {
-                    autoHide: false,
-                    className: "info"
+                var cookie = getCookie('full_read_only');
+
+                if (cookie !== null) {
+                    $.notify("${content_off}", {
+                        autoHide: false,
+                        className: "info"
                     });
                     removeCookie('full_read_only');
                 }
             });
-    </script>
+        </script>
     </c:when>
     <c:otherwise>
 
-            <script type="text/javascript">
-                $(document).ready(function () {
+        <script type="text/javascript">
+            $(document).ready(function () {
                 var cookie = getCookie('full_read_only');
-            
-                    if (cookie === null) {
-                        $.notify("<fmt:message key='full_read_only_notifier.on.notification'/>", {
-                            autoHide: false,
-                            className: "info"
-                        });
-                        setCookie('full_read_only', 'Y', {expires: 1});
-                    }
-                });
-            </script>
+
+                if (cookie === null) {
+                    $.notify("${content_on}", {
+                        autoHide: false,
+                        className: "info"
+                    });
+                    setCookie('full_read_only', 'Y', {expires: 1});
+                }
+            });
+        </script>
     </c:otherwise>
 </c:choose>
+
