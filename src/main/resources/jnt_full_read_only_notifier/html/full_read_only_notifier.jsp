@@ -18,6 +18,9 @@
 <%--@elvariable id="currentResource" type="org.jahia.services.render.Resource"--%>
 <%--@elvariable id="url" type="org.jahia.services.render.URLGenerator"--%>
 <template:addResources type="javascript" resources="notify.js"/>
+<c:if test="${renderContext.editMode}">
+    <fmt:message key='jnt_full_read_only_notifier'/>
+</c:if>
 
 <script type="text/javascript">
     /**
