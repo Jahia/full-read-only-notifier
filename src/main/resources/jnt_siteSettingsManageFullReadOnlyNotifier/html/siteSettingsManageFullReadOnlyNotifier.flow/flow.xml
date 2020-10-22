@@ -12,6 +12,8 @@
             <evaluate expression="flowHandler.getSiteFullReadOnlyMessage(flowRequestContext)" result="requestScope.fullReadOnlyNotifier"/>
         </on-render>
         <transition on="cancel" to="fullReadOnlyNotifier" bind="false" validate="false"/>
-        <transition to="fullReadOnlyNotifier"/>
+        <transition on="save" to="fullReadOnlyNotifier">
+            <evaluate expression="flowHandler.saveFullReadOnlyMessage(flowRequestContext, requestParameters.content_off, requestParameters.content_on)" result="requestScope.fullReadOnlyNotifier"/>
+        </transition>
     </view-state>
 </flow>
