@@ -87,16 +87,25 @@
     </c:if>    
 </c:forEach>
 
+<script type="text/javascript">
+    $.notify.addStyle("fron", {
+        html: "<div><span data-notify-html></span></div>",
+        classes: $.notify.getStyle("bootstrap").classes
+    });
+</script>
+
 <c:choose>
     <c:when test="${renderContext.readOnlyStatus eq 'OFF'}">
+        <div id="fron-content-off" style="display:none"><c:out value="${content_off}" escapeXml="false"/></div>
         <script type="text/javascript">
             $(document).ready(function () {
                 var cookie = getCookie('full_read_only');
 
                 if (cookie !== null) {
-                    $.notify("${content_off}", {
+                    $.notify(document.getElementById('fron-content-off').innerHTML, {
                         autoHide: false,
-                        className: "info"
+                        className: "info",
+                        style: "fron"
                     });
                     removeCookie('full_read_only');
                 }
@@ -104,15 +113,16 @@
         </script>
     </c:when>
     <c:otherwise>
-
+        <div id="fron-content-on" style="display:none"><c:out value="${content_on}" escapeXml="false"/></div>
         <script type="text/javascript">
             $(document).ready(function () {
                 var cookie = getCookie('full_read_only');
 
                 if (cookie === null) {
-                    $.notify("${content_on}", {
+                    $.notify(document.getElementById('fron-content-on').innerHTML, {
                         autoHide: false,
-                        className: "info"
+                        className: "info",
+                        style: "fron"
                     });
                     setCookie('full_read_only', 'Y', {expires: 1});
                 }
