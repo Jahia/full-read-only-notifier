@@ -1,6 +1,59 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {ApolloClient, ApolloProvider, InMemoryCache, useMutation, useQuery} from '@apollo/client';
 import {Button, Field} from '@jahia/moonstone';
+import {CKEditor} from '@ckeditor/ckeditor5-react';
+import {
+    Alignment,
+    Autoformat,
+    BlockQuote,
+    Bold,
+    Bookmark,
+    ClassicEditor,
+    Clipboard,
+    Code,
+    CodeBlock,
+    Essentials,
+    FindAndReplace,
+    Font,
+    FontBackgroundColor,
+    FontColor,
+    FontFamily,
+    FontSize,
+    Fullscreen,
+    GeneralHtmlSupport,
+    Heading,
+    HorizontalLine,
+    Image,
+    ImageCaption,
+    ImageResize,
+    ImageStyle,
+    ImageToolbar,
+    ImageUpload,
+    Indent,
+    IndentBlock,
+    Italic,
+    Link,
+    LinkImage,
+    List,
+    ListProperties,
+    Mention,
+    Paragraph,
+    PasteFromOffice,
+    RemoveFormat,
+    ShowBlocks,
+    SourceEditing,
+    SpecialCharacters,
+    SpecialCharactersEssentials,
+    Strikethrough,
+    Style,
+    Table,
+    TableCellProperties,
+    TableColumnResize,
+    TableProperties,
+    TableToolbar,
+    TextTransformation,
+    Underline
+} from 'ckeditor5';
 import {useTranslation} from 'react-i18next';
 import {GET_FRONOTIFIER_SETTINGS, UPDATE_FRONOTIFIER_SETTINGS} from './FullReadOnlyNotifier.gql';
 import styles from './FullReadOnlyNotifier.scss';
@@ -10,6 +63,158 @@ const client = new ApolloClient({
     cache: new InMemoryCache(),
     credentials: 'same-origin'
 });
+
+const editorConfig = {
+    licenseKey: 'GPL',
+    plugins: [Alignment,
+        Autoformat,
+        BlockQuote,
+        Bold,
+        Bookmark,
+        Clipboard,
+        Code,
+        CodeBlock,
+        List,
+        ListProperties,
+        Essentials,
+        FindAndReplace,
+        FontBackgroundColor,
+        Font,
+        FontColor,
+        FontFamily,
+        FontSize,
+        Fullscreen,
+        GeneralHtmlSupport,
+        Heading,
+        HorizontalLine,
+        Image,
+        ImageCaption,
+        ImageResize,
+        ImageStyle,
+        ImageToolbar,
+        ImageUpload,
+        Indent,
+        IndentBlock,
+        Italic,
+        Link,
+        LinkImage,
+        List,
+        Mention,
+        Paragraph,
+        PasteFromOffice,
+        RemoveFormat,
+        ShowBlocks,
+        SourceEditing,
+        Strikethrough,
+        Style,
+        SpecialCharacters,
+        SpecialCharactersEssentials,
+        Table,
+        TableCellProperties,
+        TableColumnResize,
+        TableProperties,
+        TableToolbar,
+        TextTransformation,
+        Underline],
+    toolbar: {
+        items: [
+            'undo',
+            'redo',
+            'showBlocks',
+            'fullScreen',
+            '|',
+            'heading',
+            'style',
+            '|',
+            'bold',
+            'italic',
+            'removeFormat',
+            '|',
+            'alignment',
+            '|',
+            'insertJahiaImage',
+            'link',
+            'bookmark',
+            'insertTable',
+            '|',
+            'bulletedList',
+            'numberedList',
+            'indent',
+            'outdent',
+            '|',
+            'sourceEditing'
+        ],
+        shouldNotGroupWhenFull: true
+    },
+    menuBar: {isVisible: false},
+    heading: {
+        options: [
+            {model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph'},
+            {model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2'},
+            {model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3'},
+            {model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4'}
+        ]
+    },
+    language: 'en',
+    image: {
+        resizeUnit: 'px',
+        toolbar: [
+            'linkImage',
+            '|',
+            'toggleImageCaption',
+            'imageTextAlternative',
+            '|',
+            'imageStyle:inline',
+            'imageStyle:alignCenter',
+            'imageStyle:wrapText',
+            '|',
+            'resizeImage:original',
+            'resizeImage:custom'
+        ]
+    },
+    table: {
+        contentToolbar: [
+            'tableColumn',
+            'tableRow',
+            'mergeTableCells',
+            'tableCellProperties',
+            'tableProperties'
+        ]
+    },
+    htmlSupport: {
+        allow: [
+            {
+                name: /.*/,
+                attributes: true,
+                classes: true,
+                styles: true
+            }
+        ],
+        htmlIframeSandbox: false
+    },
+    list: {
+        properties: {
+            styles: true,
+            startIndex: true,
+            reversed: false
+        }
+    },
+    link: {
+        toolbar: ['editLink', 'linkProperties', 'unlink'],
+        defaultProtocol: 'https://',
+        decorators: {
+            openInNewTab: {
+                mode: 'manual',
+                label: 'Open in a new tab',
+                defaultValue: false,
+                attributes: {
+                    target: '_blank',
+                    rel: 'noopener noreferrer'
+                }
+            }
+        }
+    }
+};
 
 const getSiteKey = () => {
     const parts = window.location.pathname
@@ -30,11 +235,15 @@ const FronotifierForm = () => {
     const [contentOn, setContentOn] = useState('');
     const [saveStatus, setSaveStatus] = useState(null);
     const [updateSettings, {loading: saving}] = useMutation(UPDATE_FRONOTIFIER_SETTINGS);
+    const editorOffRef = useRef(null);
+    const editorOnRef = useRef(null);
 
     useEffect(() => {
         if (data?.fronotifierSettings) {
-            setContentOff(data.fronotifierSettings.contentOff || '');
-            setContentOn(data.fronotifierSettings.contentOn || '');
+            const off = data.fronotifierSettings.contentOff || '';
+            const on = data.fronotifierSettings.contentOn || '';
+            setContentOff(off);
+            setContentOn(on);
         }
     }, [data]);
 
@@ -58,13 +267,23 @@ const FronotifierForm = () => {
     };
 
     const handleCancel = () => {
-        setContentOff(data?.fronotifierSettings?.contentOff || '');
-        setContentOn(data?.fronotifierSettings?.contentOn || '');
+        const off = data?.fronotifierSettings?.contentOff || '';
+        const on = data?.fronotifierSettings?.contentOn || '';
+        setContentOff(off);
+        setContentOn(on);
+        if (editorOffRef.current && editorOffRef.current.getData() !== off) {
+            editorOffRef.current.setData(off);
+        }
+
+        if (editorOnRef.current && editorOnRef.current.getData() !== on) {
+            editorOnRef.current.setData(on);
+        }
+
         setSaveStatus(null);
     };
 
     return (
-        <div>
+        <div className={styles.fron_wrapper}>
             <div className={styles.fron_page_header}>
                 <h2>{t('settings.title')} - {siteKey}</h2>
             </div>
@@ -86,25 +305,33 @@ const FronotifierForm = () => {
 
                 <div className={styles.fron_form}>
                     <Field label={t('settings.contentOff')} id="fron-content-off">
-                        <textarea
-                            id="fron-content-off"
-                            className={styles.fron_textarea}
-                            value={contentOff}
-                            rows={6}
-                            disabled={saving}
-                            onChange={e => setContentOff(e.target.value)}
-                        />
+                        <div className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}>
+                            <CKEditor
+                                editor={ClassicEditor}
+                                config={editorConfig}
+                                disabled={saving}
+                                data={contentOff}
+                                onReady={editor => {
+                                    editorOffRef.current = editor;
+                                }}
+                                onChange={(event, editor) => setContentOff(editor.getData())}
+                            />
+                        </div>
                     </Field>
 
                     <Field label={t('settings.contentOn')} id="fron-content-on">
-                        <textarea
-                            id="fron-content-on"
-                            className={styles.fron_textarea}
-                            value={contentOn}
-                            rows={6}
-                            disabled={saving}
-                            onChange={e => setContentOn(e.target.value)}
-                        />
+                        <div className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}>
+                            <CKEditor
+                                editor={ClassicEditor}
+                                config={editorConfig}
+                                disabled={saving}
+                                data={contentOn}
+                                onReady={editor => {
+                                    editorOnRef.current = editor;
+                                }}
+                                onChange={(event, editor) => setContentOn(editor.getData())}
+                            />
+                        </div>
                     </Field>
 
                     <div className={styles.fron_actions}>
@@ -121,6 +348,7 @@ const FronotifierForm = () => {
                             onClick={handleCancel}
                         />
                     </div>
+
                 </div>
             </div>
         </div>

@@ -876,6 +876,18 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.28.5"
 
+"@ckeditor/ckeditor5-integrations-common@^2.2.5":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@ckeditor/ckeditor5-integrations-common/-/ckeditor5-integrations-common-2.3.0.tgz#a9297d089c4e50f33159405b2dc47b63b3f24aee"
+  integrity sha512-g0ezia9TZ534lT3/vB2gJECzMJZju/A6L6Q3EqWf5hz7v8wswxaBgoDCjdHOyPelquPKn/WdlsHvaLSKHYubsA==
+
+"@ckeditor/ckeditor5-react@^11.1.0":
+  version "11.1.0"
+  resolved "https://registry.yarnpkg.com/@ckeditor/ckeditor5-react/-/ckeditor5-react-11.1.0.tgz#4fb29ba83a910d3c22251761787317fa9a037253"
+  integrity sha512-ac0iQnHg31n+IjMHeUT6xxAEH2l7H0QVT3tEeReDOTXusi4neL5GslLRmsYtz7nPnUQnoXXAaervf0YY1sOLWg==
+  dependencies:
+    "@ckeditor/ckeditor5-integrations-common" "^2.2.5"
+
 "@cyclonedx/cyclonedx-library@^6.11.0":
   version "6.13.1"
   resolved "https://registry.yarnpkg.com/@cyclonedx/cyclonedx-library/-/cyclonedx-library-6.13.1.tgz#53308e5f9889a39d3d4c8e00875528186e613044"
@@ -5471,6 +5483,7 @@ stop-iteration-iterator@^1.1.0:
     internal-slot "^1.1.0"
 
 "string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0, string-width@^4.2.2, string-width@^4.2.3:
+  name string-width-cjs
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -5555,6 +5568,7 @@ string_decoder@^1.1.1:
     safe-buffer "~5.2.0"
 
 "strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+  name strip-ansi-cjs
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==

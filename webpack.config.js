@@ -28,7 +28,15 @@ module.exports = (env, argv) => {
         resolve: {
             mainFields: ['module', 'main'],
             extensions: ['.mjs', '.js', '.jsx', '.json', '.scss'],
-            fallback: {url: false}
+            fallback: {url: false},
+            alias: {
+                // Redirect every bare 'ckeditor5' import (including those inside
+                // @ckeditor/ckeditor5-react) to a local shim that re-exports from
+                // the richtext-ckeditor5 MF remote (@jahia/ckeditor5).
+                // A local file is required because webpack resolves aliases via the
+                // filesystem before applying MF remote rules.
+                'ckeditor5': path.resolve(__dirname, 'src/javascript/ckeditor5.js')
+            }
         },
         module: {
             rules: [
@@ -66,7 +74,8 @@ module.exports = (env, argv) => {
                             loader: 'css-loader',
                             options: {
                                 modules: {
-                                    mode: 'local'
+                                    mode: 'local',
+                                    localIdentName: '[local]'
                                 }
                             }
                         },
@@ -87,7 +96,10 @@ module.exports = (env, argv) => {
         },
         plugins: [
             new ModuleFederationPlugin(getModuleFederationConfig(packageJson, {
-                library: {type: 'assign', name: 'appShell.remotes.fullReadOnlyNotifier'}
+                library: {type: 'assign', name: 'appShell.remotes.fullReadOnlyNotifier'},
+                remotes: {
+                    '@jahia/ckeditor5': 'appShell.remotes.ckeditor5'
+                }
             })),
             new CleanWebpackPlugin({verbose: false}),
             new CopyWebpackPlugin({patterns: [{from: './package.json', to: ''}]}),

@@ -1,3 +1,8 @@
+.fron_wrapper {
+  height: 100%;
+  overflow-y: auto;
+}
+
 .fron_container {
   font-family: 'Nunito Sans', sans-serif;
   color: var(--color-dark, #131c21);
@@ -87,11 +92,30 @@
   }
 }
 
+.fron_editor {
+  border: 1px solid var(--color-gray_dark, #b2b5ba);
+  border-radius: var(--radius_small, 2px);
+
+  :global(.ck-editor__editable) {
+    min-height: 200px;
+  }
+
+  :global(.ck-toolbar) {
+    border-radius: var(--radius_small, 2px) var(--radius_small, 2px) 0 0;
+  }
+
+  &--disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
 .fron_actions {
   display: flex;
   gap: var(--spacing-small, 8px);
   margin-top: var(--spacing-small, 8px);
 }
+
 
 .fron_page_header h2 {
   margin: 0;
