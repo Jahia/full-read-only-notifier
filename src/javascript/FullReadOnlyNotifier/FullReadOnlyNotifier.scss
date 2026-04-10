@@ -98,6 +98,29 @@
 
   :global(.ck-editor__editable) {
     min-height: 200px;
+
+    em, i {
+      font-style: italic;
+    }
+
+    h2, h3, h4 {
+      font-weight: bold;
+      display: block;
+    }
+
+    h2 { font-size: 1.5em; margin: 0.75em 0; }
+    h3 { font-size: 1.25em; margin: 0.75em 0; }
+    h4 { font-size: 1.1em; margin: 0.75em 0; }
+
+    ul, ol {
+      padding-left: 2em;
+      margin: 0.5em 0;
+    }
+
+    ul { list-style-type: disc; }
+    ol { list-style-type: decimal; }
+
+    li { display: list-item; }
   }
 
   :global(.ck-toolbar) {
