@@ -1,3 +1,16 @@
 {
-  "label" : "Full Read-Only Notifier"
+  "label": "Full Read-Only Notifier",
+  "settings": {
+    "title": "Full Read-Only Notifier",
+    "intro": "Configure the messages displayed to users when the site is placed in full read-only mode or restored to normal operation.",
+    "contentOff": "Message when full read-only mode is deactivated",
+    "contentOn": "Message when full read-only mode is activated",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "saved": "Settings saved successfully.",
+    "saveError": "Failed to save settings. Please try again.",
+    "loading": "Loading...",
+    "error": "Error"
+  }
 }

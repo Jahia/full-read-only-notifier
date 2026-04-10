@@ -1,0 +1,110 @@
+.fron_container {
+  font-family: 'Nunito Sans', sans-serif;
+  color: var(--color-dark, #131c21);
+  max-width: 720px;
+  padding: var(--spacing-large, 24px);
+}
+
+.fron_loading,
+.fron_error {
+  font-family: 'Nunito Sans', sans-serif;
+  padding: var(--spacing-medium, 16px);
+  color: var(--color-gray, #7a7f88);
+}
+
+.fron_error {
+  color: var(--color-danger, #f44053);
+}
+
+.fron_intro {
+  margin-bottom: var(--spacing-large, 24px);
+  padding: var(--spacing-medium, 16px);
+  background: var(--color-light, #fdfdfd);
+  border-left: 3px solid var(--color-accent, #00a0e3);
+  border-radius: 0 var(--radius, 4px) var(--radius, 4px) 0;
+
+  p {
+    margin: 0 0 var(--spacing-small, 8px);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-gray, #7a7f88);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.fron_alert {
+  padding: var(--spacing-small, 8px) var(--spacing-medium, 16px);
+  border-radius: var(--radius, 4px);
+  font-size: 13px;
+  margin-bottom: var(--spacing-medium, 16px);
+  border: 1px solid transparent;
+
+  &--success {
+    background: #eaf7eb;
+    border-color: var(--color-success, #6abb6d);
+    color: var(--color-success_dark, #267729);
+  }
+
+  &--error {
+    background: #fdecea;
+    border-color: var(--color-danger, #f44053);
+    color: var(--color-danger_dark, #840d0f);
+  }
+}
+
+.fron_form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium, 16px);
+}
+
+.fron_textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 120px;
+  padding: var(--spacing-small, 8px);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-dark, #131c21);
+  background: var(--color-light, #fdfdfd);
+  border: 1px solid var(--color-gray_dark, #b2b5ba);
+  border-radius: var(--radius_small, 2px);
+  resize: vertical;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-accent, #00a0e3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--color-gray_extra_light, #f5f5f5);
+  }
+}
+
+.fron_actions {
+  display: flex;
+  gap: var(--spacing-small, 8px);
+  margin-top: var(--spacing-small, 8px);
+}
+
+.fron_page_header h2 {
+  margin: 0;
+  padding: 0;
+  margin-left: 25px;
+  font-size: 25px;
+  line-height: 85px;
+  width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
