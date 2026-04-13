@@ -77,6 +77,7 @@
      */
     function froShowNotification(html) {
         var banner = document.createElement('div');
+        banner.setAttribute("id", "froBanner");
         banner.style.cssText = [
             'position:fixed',
             'top:16px',
