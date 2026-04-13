@@ -21,7 +21,7 @@ public class FullReadOnlyNotifierQueryExtension {
     private static final String PROP_CONTENT_OFF = "content_off";
     private static final String PROP_CONTENT_ON = "content_on";
 
-    public FullReadOnlyNotifierQueryExtension(DXGraphQLProvider.Query query) {
+    private FullReadOnlyNotifierQueryExtension() {
     }
 
     @GraphQLField
