@@ -43,7 +43,8 @@
     "react-i18next": "^11.18.6"
   },
   "resolutions": {
-    "**/xmlbuilder2/js-yaml": "3.14.2"
+    "**/xmlbuilder2/js-yaml": "3.14.2",
+    "**/libxmljs2": "0.37.0"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
