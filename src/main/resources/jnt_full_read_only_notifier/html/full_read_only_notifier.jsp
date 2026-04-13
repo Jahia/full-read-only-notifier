@@ -17,7 +17,6 @@
 <%--@elvariable id="renderContext" type="org.jahia.services.render.RenderContext"--%>
 <%--@elvariable id="currentResource" type="org.jahia.services.render.Resource"--%>
 <%--@elvariable id="url" type="org.jahia.services.render.URLGenerator"--%>
-<template:addResources type="javascript" resources="notify.js"/>
 <c:if test="${renderContext.editMode}">
     <fmt:message key='jnt_full_read_only_notifier'/>
 </c:if>
@@ -70,43 +69,80 @@
         'use strict';
         setCookie(cookieName, '', -1);
     }
+
+    /**
+     * Display an inline notification banner above the page content.
+     *
+     * @param {string} html HTML content to display inside the banner
+     */
+    function froShowNotification(html) {
+        var banner = document.createElement('div');
+        banner.style.cssText = [
+            'position:fixed',
+            'top:16px',
+            'right:16px',
+            'z-index:9999',
+            'max-width:360px',
+            'padding:12px 40px 12px 16px',
+            'color:#3a87ad',
+            'background-color:#d9edf7',
+            'border:1px solid #bce8f1',
+            'border-radius:6px',
+            'font-family:sans-serif',
+            'font-size:14px',
+            'line-height:1.5',
+            'box-shadow:0 2px 8px rgba(0,0,0,0.15)'
+        ].join(';');
+
+        var content = document.createElement('div');
+        content.innerHTML = html;
+
+        var close = document.createElement('button');
+        close.innerHTML = '&times;';
+        close.style.cssText = [
+            'position:absolute',
+            'top:50%',
+            'right:12px',
+            'transform:translateY(-50%)',
+            'background:none',
+            'border:none',
+            'font-size:20px',
+            'line-height:1',
+            'color:#3a87ad',
+            'cursor:pointer',
+            'padding:0'
+        ].join(';');
+        close.addEventListener('click', function () {
+            document.body.removeChild(banner);
+        });
+
+        banner.appendChild(content);
+        banner.appendChild(close);
+        document.body.appendChild(banner);
+    }
 </script>
 
-<c:set var="fronotifier" value="${jcr:getChildrenOfType(siteNode,'jnt:fronotifier')}"/>
+<c:set var="siteNode" value="${renderContext.site}"/>
 <fmt:message key='full_read_only_notifier.on.notification' var="content_on"/>
 <fmt:message key='full_read_only_notifier.off.notification' var="content_off"/>
 
-<c:set var="siteNode" value="${renderContext.site}"/>
-<c:forEach items="${jcr:getChildrenOfType(siteNode, 'jnt:fronotifier')}" var="fronotifier" varStatus="status">
+<c:forEach items="${jcr:getChildrenOfType(siteNode, 'jnt:fronotifier')}" var="fronotifier">
     <c:if test="${fronotifier.properties['content_off'] ne ''}">
         <c:set var="content_off" value="${fronotifier.properties['content_off']}"/>
     </c:if>
-
     <c:if test="${fronotifier.properties['content_on'] ne ''}">
         <c:set var="content_on" value="${fronotifier.properties['content_on']}"/>
-    </c:if>    
+    </c:if>
 </c:forEach>
-
-<script type="text/javascript">
-    $.notify.addStyle("fron", {
-        html: "<div><span data-notify-html></span></div>",
-        classes: $.notify.getStyle("bootstrap").classes
-    });
-</script>
 
 <c:choose>
     <c:when test="${renderContext.readOnlyStatus eq 'OFF'}">
         <div id="fron-content-off" style="display:none"><c:out value="${content_off}" escapeXml="false"/></div>
         <script type="text/javascript">
-            $(document).ready(function () {
+            document.addEventListener('DOMContentLoaded', function () {
                 var cookie = getCookie('full_read_only');
-
                 if (cookie !== null) {
-                    $.notify(document.getElementById('fron-content-off').innerHTML, {
-                        autoHide: false,
-                        className: "info",
-                        style: "fron"
-                    });
+                    froShowNotification(document.getElementById('fron-content-off').innerHTML);
                     removeCookie('full_read_only');
                 }
             });
@@ -115,19 +151,13 @@
     <c:otherwise>
         <div id="fron-content-on" style="display:none"><c:out value="${content_on}" escapeXml="false"/></div>
         <script type="text/javascript">
-            $(document).ready(function () {
+            document.addEventListener('DOMContentLoaded', function () {
                 var cookie = getCookie('full_read_only');
-
                 if (cookie === null) {
-                    $.notify(document.getElementById('fron-content-on').innerHTML, {
-                        autoHide: false,
-                        className: "info",
-                        style: "fron"
-                    });
+                    froShowNotification(document.getElementById('fron-content-on').innerHTML);
                     setCookie('full_read_only', 'Y', {expires: 1});
                 }
             });
         </script>
     </c:otherwise>
 </c:choose>
-
