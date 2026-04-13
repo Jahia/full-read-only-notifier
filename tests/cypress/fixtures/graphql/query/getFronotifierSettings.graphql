@@ -1,0 +1,6 @@
+query GetFronotifierSettings($siteKey: String!) {
+    fronotifierSettings(siteKey: $siteKey) {
+        contentOff
+        contentOn
+    }
+}

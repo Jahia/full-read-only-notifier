@@ -1,0 +1,15 @@
+{
+    "extends": [
+        "@jahia",
+        "plugin:cypress/recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:chai-friendly/recommended"
+    ],
+    "plugins": ["cypress", "chai-friendly"],
+    "parser": "@typescript-eslint/parser",
+    "rules": {
+        "@typescript-eslint/no-shadow": ["error"],
+        "no-warning-comments": ["error", { "terms": ["fixme"] }]
+    },
+    "root": true
+}

@@ -1,0 +1,7 @@
+mutation PublishNode($path: String!) {
+    jcr(workspace: EDIT) {
+        mutateNode(pathOrId: $path) {
+            publish
+        }
+    }
+}

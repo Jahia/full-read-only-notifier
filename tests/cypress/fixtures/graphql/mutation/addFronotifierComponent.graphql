@@ -1,0 +1,14 @@
+mutation AddFronotifierComponent($parentPath: String!, $name: String!) {
+    jcr(workspace: EDIT) {
+        addNode(
+            parentPathOrId: $parentPath,
+            name: $name,
+            primaryNodeType: "jnt:full_read_only_notifier"
+        ) {
+            publish
+            node {
+                path
+            }
+        }
+    }
+}
