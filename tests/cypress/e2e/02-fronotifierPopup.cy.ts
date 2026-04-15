@@ -40,17 +40,16 @@ function disableReadOnly() {
 describe('Full Read-Only Notifier Popup', () => {
     const siteKey = 'digitall';
 
-    let updateFronotifierSettings: DocumentNode;
-    let getFronotifierSettings: DocumentNode;
-    let addFronotifierComponent: DocumentNode;
-    let deleteNode: DocumentNode;
-    let publishNode: DocumentNode;
-
-    updateFronotifierSettings = require('graphql-tag/loader!../fixtures/graphql/mutation/updateFronotifierSettings.graphql');
-    getFronotifierSettings = require('graphql-tag/loader!../fixtures/graphql/query/getFronotifierSettings.graphql');
-    addFronotifierComponent = require('graphql-tag/loader!../fixtures/graphql/mutation/addFronotifierComponent.graphql');
-    deleteNode = require('graphql-tag/loader!../fixtures/graphql/mutation/deleteNode.graphql');
-    publishNode = require('graphql-tag/loader!../fixtures/graphql/mutation/publishNode.graphql');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const updateFronotifierSettings: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/updateFronotifierSettings.graphql');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const getFronotifierSettings: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/query/getFronotifierSettings.graphql');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const addFronotifierComponent: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/addFronotifierComponent.graphql');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const deleteNode: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/deleteNode.graphql');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const publishNode: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/publishNode.graphql');
 
     before(() => {
         cy.login();
@@ -61,8 +60,8 @@ describe('Full Read-Only Notifier Popup', () => {
             variables: {
                 siteKey,
                 contentOff: '<p>The website is no longer in read-only mode.</p>',
-                contentOn: '<p>The website is currently in <strong>read-only mode</strong>.</p>',
-            },
+                contentOn: '<p>The website is currently in <strong>read-only mode</strong>.</p>'
+            }
         });
 
         // Remove any component node left over from a previous run (best-effort:
@@ -85,8 +84,8 @@ describe('Full Read-Only Notifier Popup', () => {
             mutation: addFronotifierComponent,
             variables: {
                 parentPath: COMPONENT_PARENT,
-                name: COMPONENT_NAME,
-            },
+                name: COMPONENT_NAME
+            }
         });
 
         // Ensure the server starts in normal (non-read-only) mode
@@ -105,11 +104,11 @@ describe('Full Read-Only Notifier Popup', () => {
         // deletion so the live page is also cleaned up
         cy.apollo({
             mutation: deleteNode,
-            variables: {path: COMPONENT_PATH},
+            variables: {path: COMPONENT_PATH}
         });
         cy.apollo({
             mutation: publishNode,
-            variables: {path: COMPONENT_PARENT},
+            variables: {path: COMPONENT_PARENT}
         });
     });
 
@@ -136,7 +135,7 @@ describe('Full Read-Only Notifier Popup', () => {
     it('removes the cookie once the "off" notification has been shown', () => {
         cy.setCookie(COOKIE_NAME, 'Y');
         cy.visit(WEBSITE_PATH);
-        
+
         cy.contains('The website is no longer in read-only mode.');
         // The JSP calls removeCookie() synchronously after showing the popup
         cy.getCookie(COOKIE_NAME).should('be.null');

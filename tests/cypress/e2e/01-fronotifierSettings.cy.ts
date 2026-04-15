@@ -1,5 +1,5 @@
 import {DocumentNode} from 'graphql';
-import {enableModule,editSite} from '@jahia/cypress';
+import {enableModule, editSite} from '@jahia/cypress';
 
 // Helper: switch a CKEditor instance (by 0-based index) to source-editing mode,
 // replace its content with rawHtml, then switch back to WYSIWYG mode.
@@ -7,11 +7,8 @@ function setCkEditorContent(editorIndex: number, rawHtml: string) {
     // Open source-editing mode
     cy.get('.ck-editor').eq(editorIndex).find('.ck-source-editing-button').click();
     // Replace the entire content of the source textarea
-    cy.get('.ck-editor')
-        .eq(editorIndex)
-        .find('.ck-source-editing-area textarea')
-        .clear()
-        .type(rawHtml, {parseSpecialCharSequences: false});
+    cy.get('.ck-editor').eq(editorIndex).find('.ck-source-editing-area textarea').clear();
+    cy.get('.ck-editor').eq(editorIndex).find('.ck-source-editing-area textarea').type(rawHtml, {parseSpecialCharSequences: false});
     // Close source-editing mode (commits the HTML back to the model)
     cy.get('.ck-editor').eq(editorIndex).find('.ck-source-editing-button').click();
 }
@@ -41,11 +38,10 @@ describe('Full Read-Only Notifier Settings', () => {
     const siteKey = 'digitall';
     const adminPath = `/jahia/administration/${siteKey}/fullReadOnlyNotifierManager`;
 
-    let updateFronotifierSettings: DocumentNode;
-    let getFronotifierSettings: DocumentNode;
-
-    updateFronotifierSettings = require('graphql-tag/loader!../fixtures/graphql/mutation/updateFronotifierSettings.graphql');
-    getFronotifierSettings = require('graphql-tag/loader!../fixtures/graphql/query/getFronotifierSettings.graphql');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const updateFronotifierSettings: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/updateFronotifierSettings.graphql');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const getFronotifierSettings: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/query/getFronotifierSettings.graphql');
 
     before(() => {
         cy.login();
@@ -57,8 +53,8 @@ describe('Full Read-Only Notifier Settings', () => {
             variables: {
                 siteKey,
                 contentOff: '',
-                contentOn: '',
-            },
+                contentOn: ''
+            }
         });
     });
 
@@ -85,8 +81,8 @@ describe('Full Read-Only Notifier Settings', () => {
             variables: {
                 siteKey,
                 contentOff: '<p>Read-only mode is <strong>off</strong>.</p>',
-                contentOn: '<p>Site is in <em>read-only</em> mode.</p>',
-            },
+                contentOn: '<p>Site is in <em>read-only</em> mode.</p>'
+            }
         }).its('data.updateFronotifierSettings').should('be.true');
 
         cy.apollo({query: getFronotifierSettings, variables: {siteKey}})
@@ -102,7 +98,7 @@ describe('Full Read-Only Notifier Settings', () => {
         // Pre-clear via API so the editors start empty
         cy.apollo({
             mutation: updateFronotifierSettings,
-            variables: {siteKey, contentOff: '', contentOn: ''},
+            variables: {siteKey, contentOff: '', contentOn: ''}
         });
 
         cy.visit(adminPath);
@@ -130,8 +126,8 @@ describe('Full Read-Only Notifier Settings', () => {
             variables: {
                 siteKey,
                 contentOff: '<p>Off content loaded from API</p>',
-                contentOn: '<p>On content loaded from API</p>',
-            },
+                contentOn: '<p>On content loaded from API</p>'
+            }
         });
 
         cy.visit(adminPath);
@@ -148,8 +144,8 @@ describe('Full Read-Only Notifier Settings', () => {
             variables: {
                 siteKey,
                 contentOff: '<p>Original off</p>',
-                contentOn: '<p>Original on</p>',
-            },
+                contentOn: '<p>Original on</p>'
+            }
         });
 
         cy.visit(adminPath);
@@ -174,8 +170,8 @@ describe('Full Read-Only Notifier Settings', () => {
             variables: {
                 siteKey,
                 contentOff: '<p>Persistent off</p>',
-                contentOn: '<p>Persistent on</p>',
-            },
+                contentOn: '<p>Persistent on</p>'
+            }
         });
 
         // First visit
@@ -199,19 +195,19 @@ describe('Full Read-Only Notifier Settings', () => {
             variables: {
                 siteKey,
                 contentOff: 'To be cleared',
-                contentOn: 'To be cleared',
-            },
+                contentOn: 'To be cleared'
+            }
         });
-        
+
         cy.visit(adminPath);
         cy.get('.ck-editor__editable[contenteditable="true"]').should('have.length', 2);
 
         emptyCkEditorContent(0);
         emptyCkEditorContent(1);
-        
+
         cy.contains('button', 'Save').click();
         cy.contains('Settings saved successfully.').should('be.visible');
-        
+
         cy.apollo({query: getFronotifierSettings, variables: {siteKey}})
             .its('data.fronotifierSettings')
             .should((settings: Record<string, string | null>) => {
