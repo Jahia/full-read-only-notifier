@@ -165,7 +165,7 @@ describe('Full Read-Only Notifier Popup', () => {
         cy.apollo({query: getFronotifierSettings, variables: {siteKey}})
             .its('data.fronotifierSettings.contentOff')
             .then((html: string) => {
-                cy.get(BANNER).should('contain.text', html.replace(/[<>]/g, ''));
+                cy.get(BANNER).should('contain.text', html.replace(/<[^>]+>/g, ''));
             });
     });
 
