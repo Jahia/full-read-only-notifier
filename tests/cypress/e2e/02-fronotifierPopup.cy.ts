@@ -165,7 +165,7 @@ describe('Full Read-Only Notifier Popup', () => {
         cy.apollo({query: getFronotifierSettings, variables: {siteKey}})
             .its('data.fronotifierSettings.contentOff')
             .then((html: string) => {
-                cy.get(BANNER).should('contain.text', html.replace(/<[^>]+>/g, ''));
+                cy.get(BANNER).should('contain.text', html.replace(/[<>]/g, ''));
             });
     });
 
@@ -228,7 +228,10 @@ describe('Full Read-Only Notifier Popup', () => {
         cy.apollo({query: getFronotifierSettings, variables: {siteKey}})
             .its('data.fronotifierSettings.contentOn')
             .then((html: string) => {
-                cy.get(BANNER).should('contain.text', html.replace(/<[^>]+>/g, ''));
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                const expectedText = tmp.textContent ?? '';
+                cy.get(BANNER).should('contain.text', expectedText);
             });
 
         disableReadOnly();
