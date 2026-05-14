@@ -237,6 +237,7 @@ const FronotifierForm = () => {
     const [updateSettings, {loading: saving}] = useMutation(UPDATE_FRONOTIFIER_SETTINGS);
     const editorOffRef = useRef(null);
     const editorOnRef = useRef(null);
+    const statusRef = useRef(null);
 
     useEffect(() => {
         if (data?.fronotifierSettings) {
@@ -248,11 +249,11 @@ const FronotifierForm = () => {
     }, [data]);
 
     if (loading) {
-        return <div className={styles.fron_loading}>{t('settings.loading')}</div>;
+        return <div className={styles.fron_loading} role="status">{t('settings.loading')}</div>;
     }
 
     if (error) {
-        return <div className={styles.fron_error}>{t('settings.error')}: {error.message}</div>;
+        return <div className={styles.fron_error} role="alert">{t('settings.error')}: {error.message}</div>;
     }
 
     const handleSave = async () => {
@@ -264,6 +265,8 @@ const FronotifierForm = () => {
             console.error('Failed to update Full Read-Only Notifier settings:', err);
             setSaveStatus('error');
         }
+
+        setTimeout(() => statusRef.current?.focus(), 50);
     };
 
     const handleCancel = () => {
@@ -282,8 +285,23 @@ const FronotifierForm = () => {
         setSaveStatus(null);
     };
 
+    const srLiveMsg = saveStatus === 'success' ? t('settings.saved') :
+        saveStatus === 'error' ? t('settings.saveError') : '';
+
     return (
         <div className={styles.fron_wrapper}>
+            {/* Persistent live region — always in DOM so AT registers it before content changes */}
+            <div
+                ref={statusRef}
+                tabIndex={-1}
+                role={saveStatus === 'error' ? 'alert' : 'status'}
+                aria-live={saveStatus === 'error' ? 'assertive' : 'polite'}
+                aria-atomic="true"
+                className={styles.fron_sr_only}
+            >
+                {srLiveMsg}
+            </div>
+
             <div className={styles.fron_page_header}>
                 <h2>{t('settings.title')} - {siteKey}</h2>
             </div>
@@ -293,18 +311,23 @@ const FronotifierForm = () => {
                 </div>
 
                 {saveStatus === 'success' && (
-                    <div className={`${styles.fron_alert} ${styles['fron_alert--success']}`}>
+                    <div aria-hidden="true" className={`${styles.fron_alert} ${styles['fron_alert--success']}`}>
                         {t('settings.saved')}
                     </div>
                 )}
                 {saveStatus === 'error' && (
-                    <div className={`${styles.fron_alert} ${styles['fron_alert--error']}`}>
+                    <div aria-hidden="true" className={`${styles.fron_alert} ${styles['fron_alert--error']}`}>
                         {t('settings.saveError')}
                     </div>
                 )}
 
                 <div className={styles.fron_form}>
-                    <Field label={t('settings.contentOff')} id="fron-content-off">
+                    {/*
+                      * CKEditor renders a contenteditable div; Field's htmlFor cannot associate with
+                      * a contenteditable, so we omit the id prop and set aria-label on the editor
+                      * editable via the onReady callback instead.
+                      */}
+                    <Field label={t('settings.contentOff')}>
                         <div className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}>
                             <CKEditor
                                 editor={ClassicEditor}
@@ -313,13 +336,20 @@ const FronotifierForm = () => {
                                 data={contentOff}
                                 onReady={editor => {
                                     editorOffRef.current = editor;
+                                    editor.editing.view.change(writer => {
+                                        writer.setAttribute(
+                                            'aria-label',
+                                            t('settings.contentOff'),
+                                            editor.editing.view.document.getRoot()
+                                        );
+                                    });
                                 }}
                                 onChange={(event, editor) => setContentOff(editor.getData())}
                             />
                         </div>
                     </Field>
 
-                    <Field label={t('settings.contentOn')} id="fron-content-on">
+                    <Field label={t('settings.contentOn')}>
                         <div className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}>
                             <CKEditor
                                 editor={ClassicEditor}
@@ -328,6 +358,13 @@ const FronotifierForm = () => {
                                 data={contentOn}
                                 onReady={editor => {
                                     editorOnRef.current = editor;
+                                    editor.editing.view.change(writer => {
+                                        writer.setAttribute(
+                                            'aria-label',
+                                            t('settings.contentOn'),
+                                            editor.editing.view.document.getRoot()
+                                        );
+                                    });
                                 }}
                                 onChange={(event, editor) => setContentOn(editor.getData())}
                             />
@@ -336,12 +373,14 @@ const FronotifierForm = () => {
 
                     <div className={styles.fron_actions}>
                         <Button
+                            type="button"
                             label={saving ? t('settings.saving') : t('settings.save')}
                             variant="primary"
                             isDisabled={saving}
                             onClick={handleSave}
                         />
                         <Button
+                            type="button"
                             label={t('settings.cancel')}
                             variant="secondary"
                             isDisabled={saving}
