@@ -120,7 +120,6 @@ const editorConfig = {
         items: [
             'undo',
             'redo',
-            'showBlocks',
             'fullScreen',
             '|',
             'heading',
@@ -234,10 +233,12 @@ const FronotifierForm = () => {
     const [contentOff, setContentOff] = useState('');
     const [contentOn, setContentOn] = useState('');
     const [saveStatus, setSaveStatus] = useState(null);
+    const [politeMsg, setPoliteMsg] = useState('');
+    const [assertiveMsg, setAssertiveMsg] = useState('');
     const [updateSettings, {loading: saving}] = useMutation(UPDATE_FRONOTIFIER_SETTINGS);
     const editorOffRef = useRef(null);
     const editorOnRef = useRef(null);
-    const statusRef = useRef(null);
+    const errorRegionId = 'fron-error-region';
 
     useEffect(() => {
         if (data?.fronotifierSettings) {
@@ -248,6 +249,21 @@ const FronotifierForm = () => {
         }
     }, [data]);
 
+    useEffect(() => {
+        document.title = t('settings.title');
+    }, [t]);
+
+    useEffect(() => {
+        const invalid = saveStatus === 'error' ? 'true' : 'false';
+        [editorOffRef, editorOnRef].forEach(ref => {
+            if (ref.current) {
+                ref.current.editing.view.change(writer => {
+                    writer.setAttribute('aria-invalid', invalid, ref.current.editing.view.document.getRoot());
+                });
+            }
+        });
+    }, [saveStatus]);
+
     if (loading) {
         return <div className={styles.fron_loading} role="status">{t('settings.loading')}</div>;
     }
@@ -257,16 +273,26 @@ const FronotifierForm = () => {
     }
 
     const handleSave = async () => {
-        setSaveStatus(null);
         try {
             const result = await updateSettings({variables: {siteKey, contentOff, contentOn}});
-            setSaveStatus(result.data?.updateFronotifierSettings ? 'success' : 'error');
+            const newStatus = result.data?.updateFronotifierSettings ? 'success' : 'error';
+            setSaveStatus(newStatus);
+            if (newStatus === 'success') {
+                setAssertiveMsg('');
+                setPoliteMsg('');
+                requestAnimationFrame(() => setTimeout(() => setPoliteMsg(t('settings.saved')), 100));
+            } else {
+                setPoliteMsg('');
+                setAssertiveMsg('');
+                requestAnimationFrame(() => setTimeout(() => setAssertiveMsg(t('settings.saveError')), 100));
+            }
         } catch (err) {
             console.error('Failed to update Full Read-Only Notifier settings:', err);
             setSaveStatus('error');
+            setPoliteMsg('');
+            setAssertiveMsg('');
+            requestAnimationFrame(() => setTimeout(() => setAssertiveMsg(t('settings.saveError')), 100));
         }
-
-        setTimeout(() => statusRef.current?.focus(), 50);
     };
 
     const handleCancel = () => {
@@ -283,23 +309,18 @@ const FronotifierForm = () => {
         }
 
         setSaveStatus(null);
+        setAssertiveMsg('');
+        setPoliteMsg('');
+        requestAnimationFrame(() => setTimeout(() => setPoliteMsg(t('settings.cancelled')), 100));
     };
-
-    const srLiveMsg = saveStatus === 'success' ? t('settings.saved') :
-        saveStatus === 'error' ? t('settings.saveError') : '';
 
     return (
         <div className={styles.fron_wrapper}>
-            {/* Persistent live region — always in DOM so AT registers it before content changes */}
-            <div
-                ref={statusRef}
-                tabIndex={-1}
-                role={saveStatus === 'error' ? 'alert' : 'status'}
-                aria-live={saveStatus === 'error' ? 'assertive' : 'polite'}
-                aria-atomic="true"
-                className={styles.fron_sr_only}
-            >
-                {srLiveMsg}
+            <div role="status" aria-live="polite" aria-atomic="true" className={styles.fron_sr_only}>
+                {politeMsg}
+            </div>
+            <div id={errorRegionId} role="alert" aria-live="assertive" aria-atomic="true" className={styles.fron_sr_only}>
+                {assertiveMsg}
             </div>
 
             <div className={styles.fron_page_header}>
@@ -328,7 +349,10 @@ const FronotifierForm = () => {
                       * editable via the onReady callback instead.
                       */}
                     <Field label={t('settings.contentOff')}>
-                        <div className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}>
+                        <div
+                            className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}
+                            {...(saving ? {inert: ''} : {})}
+                        >
                             <CKEditor
                                 editor={ClassicEditor}
                                 config={editorConfig}
@@ -337,11 +361,10 @@ const FronotifierForm = () => {
                                 onReady={editor => {
                                     editorOffRef.current = editor;
                                     editor.editing.view.change(writer => {
-                                        writer.setAttribute(
-                                            'aria-label',
-                                            t('settings.contentOff'),
-                                            editor.editing.view.document.getRoot()
-                                        );
+                                        const root = editor.editing.view.document.getRoot();
+                                        writer.setAttribute('aria-label', t('settings.contentOff'), root);
+                                        writer.setAttribute('aria-required', 'true', root);
+                                        writer.setAttribute('aria-describedby', errorRegionId, root);
                                     });
                                 }}
                                 onChange={(event, editor) => setContentOff(editor.getData())}
@@ -350,7 +373,10 @@ const FronotifierForm = () => {
                     </Field>
 
                     <Field label={t('settings.contentOn')}>
-                        <div className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}>
+                        <div
+                            className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}
+                            {...(saving ? {inert: ''} : {})}
+                        >
                             <CKEditor
                                 editor={ClassicEditor}
                                 config={editorConfig}
@@ -359,11 +385,10 @@ const FronotifierForm = () => {
                                 onReady={editor => {
                                     editorOnRef.current = editor;
                                     editor.editing.view.change(writer => {
-                                        writer.setAttribute(
-                                            'aria-label',
-                                            t('settings.contentOn'),
-                                            editor.editing.view.document.getRoot()
-                                        );
+                                        const root = editor.editing.view.document.getRoot();
+                                        writer.setAttribute('aria-label', t('settings.contentOn'), root);
+                                        writer.setAttribute('aria-required', 'true', root);
+                                        writer.setAttribute('aria-describedby', errorRegionId, root);
                                     });
                                 }}
                                 onChange={(event, editor) => setContentOn(editor.getData())}
