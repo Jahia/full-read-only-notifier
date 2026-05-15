@@ -13,6 +13,11 @@
 .fron_wrapper {
   height: 100%;
   overflow-y: auto;
+
+  :focus-visible {
+    outline: 2px solid #0077cc;
+    outline-offset: 2px;
+  }
 }
 
 .fron_container {
@@ -26,11 +31,11 @@
 .fron_error {
   font-family: 'Nunito Sans', sans-serif;
   padding: var(--spacing-medium, 16px);
-  color: #5c6370;
+  color: #545454;
 }
 
 .fron_error {
-  color: var(--color-danger, #f44053);
+  color: var(--color-danger, #c62828);
 }
 
 .fron_intro {
@@ -42,9 +47,9 @@
 
   p {
     margin: 0 0 var(--spacing-small, 8px);
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.5;
-    color: #5c6370;
+    color: #545454;
 
     &:last-child {
       margin-bottom: 0;
@@ -55,7 +60,7 @@
 .fron_alert {
   padding: var(--spacing-small, 8px) var(--spacing-medium, 16px);
   border-radius: var(--radius, 4px);
-  font-size: 13px;
+  font-size: 0.8125rem;
   margin-bottom: var(--spacing-medium, 16px);
   border: 1px solid transparent;
 
@@ -84,11 +89,11 @@
   min-height: 120px;
   padding: var(--spacing-small, 8px);
   font-family: 'Nunito Sans', sans-serif;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--color-dark, #131c21);
   background: var(--color-light, #fdfdfd);
-  border: 1px solid var(--color-gray_dark, #b2b5ba);
+  border: 1px solid #767676;
   border-radius: var(--radius_small, 2px);
   resize: vertical;
 
@@ -107,7 +112,7 @@
 }
 
 .fron_editor {
-  border: 1px solid var(--color-gray_dark, #b2b5ba);
+  border: 1px solid #767676;
   border-radius: var(--radius_small, 2px);
 
   :global(.ck-editor__editable) {
@@ -143,7 +148,6 @@
 
   &--disabled {
     opacity: 0.6;
-    pointer-events: none;
   }
 }
 
@@ -157,7 +161,7 @@
   margin: 0;
   padding: 0;
   margin-left: 25px;
-  font-size: 25px;
+  font-size: 1.5625rem;
   line-height: 85px;
   width: 80%;
   white-space: nowrap;
