@@ -16,11 +16,6 @@ import javax.jcr.RepositoryException;
 @GraphQLDescription("Full Read-Only Notifier queries")
 public class FullReadOnlyNotifierQueryExtension {
 
-    private static final String FRONOTIFIER = "fronotifier";
-    private static final String FRONOTIFIER_NODE_TYPE = "jnt:fronotifier";
-    private static final String PROP_CONTENT_OFF = "content_off";
-    private static final String PROP_CONTENT_ON = "content_on";
-
     private FullReadOnlyNotifierQueryExtension() {
     }
 
@@ -31,17 +26,20 @@ public class FullReadOnlyNotifierQueryExtension {
     @GraphQLRequiresPermission("siteAdminUsers")
     public static GqlFronotifierSettings getFronotifierSettings(
             @GraphQLName("siteKey") @GraphQLNonNull String siteKey) throws RepositoryException {
+        final String safeSiteKey = FronotifierConstants.requireValidSiteKey(siteKey);
         return JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, "default", null, session -> {
-            final JCRNodeWrapper siteNode = session.getNode("/sites/" + siteKey);
+            final JCRNodeWrapper siteNode = session.getNode(FronotifierConstants.SITES_ROOT + safeSiteKey);
             final JCRNodeWrapper froNode;
-            if (siteNode.hasNode(FRONOTIFIER)) {
-                froNode = siteNode.getNode(FRONOTIFIER);
+            if (siteNode.hasNode(FronotifierConstants.FRONOTIFIER)) {
+                froNode = siteNode.getNode(FronotifierConstants.FRONOTIFIER);
             } else {
-                froNode = siteNode.addNode(FRONOTIFIER, FRONOTIFIER_NODE_TYPE);
+                froNode = siteNode.addNode(FronotifierConstants.FRONOTIFIER, FronotifierConstants.FRONOTIFIER_NODE_TYPE);
                 session.save();
             }
-            final String contentOff = froNode.hasProperty(PROP_CONTENT_OFF) ? froNode.getPropertyAsString(PROP_CONTENT_OFF) : "";
-            final String contentOn = froNode.hasProperty(PROP_CONTENT_ON) ? froNode.getPropertyAsString(PROP_CONTENT_ON) : "";
+            final String contentOff = froNode.hasProperty(FronotifierConstants.PROP_CONTENT_OFF)
+                    ? froNode.getPropertyAsString(FronotifierConstants.PROP_CONTENT_OFF) : "";
+            final String contentOn = froNode.hasProperty(FronotifierConstants.PROP_CONTENT_ON)
+                    ? froNode.getPropertyAsString(FronotifierConstants.PROP_CONTENT_ON) : "";
             return new GqlFronotifierSettings(contentOff, contentOn);
         });
     }

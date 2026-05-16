@@ -16,11 +16,6 @@ import javax.jcr.RepositoryException;
 @GraphQLDescription("Full Read-Only Notifier mutations")
 public class FullReadOnlyNotifierMutationExtension {
 
-    private static final String FRONOTIFIER = "fronotifier";
-    private static final String FRONOTIFIER_NODE_TYPE = "jnt:fronotifier";
-    private static final String PROP_CONTENT_OFF = "content_off";
-    private static final String PROP_CONTENT_ON = "content_on";
-
     private FullReadOnlyNotifierMutationExtension() {
     }
 
@@ -33,16 +28,17 @@ public class FullReadOnlyNotifierMutationExtension {
             @GraphQLName("siteKey") @GraphQLNonNull String siteKey,
             @GraphQLName("contentOff") @GraphQLNonNull String contentOff,
             @GraphQLName("contentOn") @GraphQLNonNull String contentOn) throws RepositoryException {
+        final String safeSiteKey = FronotifierConstants.requireValidSiteKey(siteKey);
         return JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, "default", null, session -> {
-            final JCRNodeWrapper siteNode = session.getNode("/sites/" + siteKey);
+            final JCRNodeWrapper siteNode = session.getNode(FronotifierConstants.SITES_ROOT + safeSiteKey);
             final JCRNodeWrapper froNode;
-            if (siteNode.hasNode(FRONOTIFIER)) {
-                froNode = siteNode.getNode(FRONOTIFIER);
+            if (siteNode.hasNode(FronotifierConstants.FRONOTIFIER)) {
+                froNode = siteNode.getNode(FronotifierConstants.FRONOTIFIER);
             } else {
-                froNode = siteNode.addNode(FRONOTIFIER, FRONOTIFIER_NODE_TYPE);
+                froNode = siteNode.addNode(FronotifierConstants.FRONOTIFIER, FronotifierConstants.FRONOTIFIER_NODE_TYPE);
             }
-            froNode.setProperty(PROP_CONTENT_OFF, contentOff);
-            froNode.setProperty(PROP_CONTENT_ON, contentOn);
+            froNode.setProperty(FronotifierConstants.PROP_CONTENT_OFF, contentOff);
+            froNode.setProperty(FronotifierConstants.PROP_CONTENT_ON, contentOn);
             session.save();
             return Boolean.TRUE;
         });
