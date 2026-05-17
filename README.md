@@ -12,9 +12,11 @@ Two notifications are configurable per site:
 
 | Requirement | Version |
 |---|---|
-| Jahia DX | ≥ 7.2.3.0 |
+| Jahia | ≥ 8.2.1.0 |
 | `graphql-dxm-provider` | ≥ 3.4.0 |
 | `richtext-ckeditor5` | any |
+
+`jahia-depends`: `default,siteSettings,graphql-dxm-provider,richtext-ckeditor5`
 
 ## Installation
 
@@ -27,6 +29,7 @@ Two notifications are configurable per site:
 Once installed and activated on a site, the notification messages are managed through the Jahia administration UI:
 
 **Administration → Sites → `<site>` → Full Read-Only Notifier**
+(`/jahia/administration/{siteKey}/fullReadOnlyNotifierManager`)
 
 The settings panel provides two CKEditor5 WYSIWYG editors:
 - **Content On** — HTML message shown when the instance enters read-only mode.
