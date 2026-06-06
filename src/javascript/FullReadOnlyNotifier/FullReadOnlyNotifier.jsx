@@ -98,7 +98,6 @@ const editorConfig = {
         Italic,
         Link,
         LinkImage,
-        List,
         Mention,
         Paragraph,
         PasteFromOffice,
@@ -182,14 +181,32 @@ const editorConfig = {
     },
     htmlSupport: {
         allow: [
-            {
-                name: /.*/,
-                attributes: true,
-                classes: true,
-                styles: true
-            }
+            // Block-level structural elements
+            {name: 'div', attributes: ['id', 'class', 'lang', 'dir'], classes: true, styles: false},
+            {name: 'section', attributes: ['id', 'class'], classes: true, styles: false},
+            {name: 'article', attributes: ['id', 'class'], classes: true, styles: false},
+            {name: 'header', attributes: ['id', 'class'], classes: true, styles: false},
+            {name: 'footer', attributes: ['id', 'class'], classes: true, styles: false},
+            {name: 'main', attributes: ['id', 'class'], classes: true, styles: false},
+            {name: 'nav', attributes: ['id', 'class'], classes: true, styles: false},
+            {name: 'aside', attributes: ['id', 'class'], classes: true, styles: false},
+            // Inline text elements
+            {name: 'span', attributes: ['id', 'class', 'lang', 'dir'], classes: true, styles: false},
+            {name: 'abbr', attributes: ['title', 'class'], classes: true, styles: false},
+            {name: 'cite', attributes: ['class'], classes: true, styles: false},
+            {name: 'mark', attributes: ['class'], classes: true, styles: false},
+            {name: 'small', attributes: ['class'], classes: true, styles: false},
+            {name: 'time', attributes: ['datetime', 'class'], classes: true, styles: false},
+            // Safe media: figures and images (no remote script surfaces)
+            {name: 'figure', attributes: ['id', 'class'], classes: true, styles: false},
+            {name: 'figcaption', attributes: ['class'], classes: true, styles: false},
+            // Definition lists (not covered by the List plugin)
+            {name: 'dl', attributes: ['class'], classes: true, styles: false},
+            {name: 'dt', attributes: ['class'], classes: true, styles: false},
+            {name: 'dd', attributes: ['class'], classes: true, styles: false}
         ],
-        htmlIframeSandbox: false
+        // Keep sandbox enabled (false would disable the sandbox on iframes)
+        htmlIframeSandbox: ['allow-scripts', 'allow-same-origin']
     },
     list: {
         properties: {
