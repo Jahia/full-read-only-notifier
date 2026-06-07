@@ -98,7 +98,7 @@ module.exports = (env, argv) => {
             new ModuleFederationPlugin(getModuleFederationConfig(packageJson, {
                 library: {type: 'assign', name: 'appShell.remotes.fullReadOnlyNotifier'},
                 remotes: {
-                    '@jahia/ckeditor5': 'appShell.remotes.ckeditor5'
+                    '@jahia/ckeditor5': 'appShell.remotes.richtextCkeditor5'
                 }
             })),
             new CleanWebpackPlugin({verbose: false}),

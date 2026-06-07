@@ -22,7 +22,7 @@
       - 'mvn:org.jahia.modules/rating/3.3.0'
       - 'mvn:org.jahia.modules/skins/8.2.0'
       - 'mvn:org.jahia.modules/topstories/3.0.0'
-      - 'mvn:org.jahia.modules/richtext-ckeditor5/1.0.0-beta-2'
+      - 'mvn:org.jahia.modules/richtext-ckeditor5/LATEST'
   autoStart: true
   uninstallPreviousVersion: true
 - karafCommand: "log:log 'END - Install Digitall bundles'"
