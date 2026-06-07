@@ -14,5 +14,4 @@ export default function () {
         render: () => React.createElement(FullReadOnlyNotifier)
     });
 
-    console.debug('%c full-read-only-notifier routes registered', 'color: #463CBA');
 }

@@ -71,6 +71,46 @@
     }
 
     /**
+     * Sanitize an HTML string by removing script elements, event-handler attributes,
+     * javascript: href/src values, and data: URIs before any DOM injection.
+     * This is a defence-in-depth measure; the primary trust boundary is the
+     * siteAdminUsers permission checked at the GraphQL mutation level.
+     *
+     * @param {string} html Raw HTML string from JCR
+     * @returns {string} Sanitized HTML string (text content preserved, dangerous markup removed)
+     */
+    function froSanitize(html) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+
+        // Remove script and style elements entirely
+        var dangerous = tmp.querySelectorAll('script,style,iframe,object,embed,form,input,button,select,textarea,meta,link,base');
+        for (var i = dangerous.length - 1; i >= 0; i--) {
+            dangerous[i].parentNode.removeChild(dangerous[i]);
+        }
+
+        // Walk all elements and strip dangerous attributes
+        var allElements = tmp.getElementsByTagName('*');
+        var dangerousAttrs = /^(on\w+|style)$/i;
+        var dangerousHref = /^\s*(javascript|vbscript|data)\s*:/i;
+        for (var j = 0; j < allElements.length; j++) {
+            var el = allElements[j];
+            var attrs = Array.prototype.slice.call(el.attributes);
+            for (var k = 0; k < attrs.length; k++) {
+                var attrName = attrs[k].name;
+                var attrValue = attrs[k].value;
+                if (dangerousAttrs.test(attrName)) {
+                    el.removeAttribute(attrName);
+                } else if ((attrName === 'href' || attrName === 'src' || attrName === 'action') && dangerousHref.test(attrValue)) {
+                    el.removeAttribute(attrName);
+                }
+            }
+        }
+
+        return tmp.innerHTML;
+    }
+
+    /**
      * Display an inline notification banner above the page content.
      *
      * @param {string} html HTML content to display inside the banner
@@ -96,7 +136,7 @@
         ].join(';');
 
         var content = document.createElement('div');
-        content.innerHTML = html;
+        content.innerHTML = froSanitize(html);
 
         var close = document.createElement('button');
         close.innerHTML = '&times;';

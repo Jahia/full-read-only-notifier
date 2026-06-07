@@ -1,6 +1,6 @@
 {
   "name": "@jahia/full-read-only-notifier",
-  "version": "2.0.2-SNAPSHOT",
+  "version": "2.0.4-SNAPSHOT",
   "scripts": {
     "build": "yarn webpack",
     "webpack": "webpack",
