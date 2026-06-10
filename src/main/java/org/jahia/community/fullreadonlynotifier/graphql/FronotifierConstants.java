@@ -14,9 +14,14 @@ final class FronotifierConstants {
     @SuppressWarnings("java:S1075") // Jahia framework path: site nodes always live under /sites/
     static final String SITES_ROOT = "/sites/";
 
+    // Upper bound on a site key length; mirrors Jahia's practical site-key limits and
+    // bounds the regex so a hostile, very long input cannot drive pathological matching.
+    private static final int SITE_KEY_MAX_LENGTH = 150;
+
     // Jahia site keys are alphanumeric with dashes/underscores. This pattern also blocks
     // path traversal (no '/', no '..') and JCR-meta characters.
-    private static final Pattern SITE_KEY_PATTERN = Pattern.compile("[A-Za-z0-9_\\-]{1,150}");
+    private static final Pattern SITE_KEY_PATTERN =
+            Pattern.compile("[A-Za-z0-9_\\-]{1," + SITE_KEY_MAX_LENGTH + "}");
 
     private FronotifierConstants() {
     }
