@@ -4,7 +4,7 @@
   "description": "Cypress tests for the Full Read-Only Notifier module",
   "devDependencies": {
     "@apollo/client": "^3.14.0",
-    "@babel/core": "^7.25.2",
+    "@babel/core": "^7.29.6",
     "@cypress/code-coverage": "^4.0.3",
     "@cypress/webpack-preprocessor": "^5.9.1",
     "@jahia/cypress": "^7.0.0",
