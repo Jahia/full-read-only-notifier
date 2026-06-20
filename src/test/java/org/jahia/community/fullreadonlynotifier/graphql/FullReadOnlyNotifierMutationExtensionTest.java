@@ -13,7 +13,6 @@ import javax.jcr.PathNotFoundException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,8 +21,8 @@ import static org.mockito.Mockito.when;
  * Unit tests for {@link FullReadOnlyNotifierMutationExtension}.
  *
  * <p>Tests target the package-private {@code writeSettings} and {@code sanitizeContent}
- * seams to avoid the static {@code JCRTemplate.getInstance()} call. See the TODO in
- * the production class for the deferred refactor.
+ * seams to avoid the static {@code JCRTemplate.getInstance()} call. See the
+ * deferred-refactor note in the production class.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class FullReadOnlyNotifierMutationExtensionTest {

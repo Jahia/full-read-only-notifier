@@ -36,7 +36,8 @@
             d.setTime(d.getTime() + (expireDays * 24 * 60 * 60 * 1000));
             expires = '; expires=' + d.toUTCString();
         }
-        document.cookie = cookieName + '=' + cookieValue + expires + '; path=/';
+        var secure = (location.protocol === 'https:') ? '; Secure' : '';
+        document.cookie = cookieName + '=' + encodeURIComponent(cookieValue) + expires + '; path=/; SameSite=Strict' + secure;
     }
 
     /**
@@ -73,8 +74,11 @@
     /**
      * Sanitize an HTML string by removing script elements, event-handler attributes,
      * javascript: href/src values, and data: URIs before any DOM injection.
-     * This is a defence-in-depth measure; the primary trust boundary is the
-     * siteAdminUsers permission checked at the GraphQL mutation level.
+     *
+     * IMPORTANT: This is a DEFENCE-IN-DEPTH (blocklist) measure only. The PRIMARY
+     * security control is the AUTHORITATIVE server-side sanitization applied at
+     * write-time in the GraphQL mutation, behind the siteAdminUsers permission.
+     * A blocklist can never be exhaustive; do not rely on this function alone.
      *
      * @param {string} html Raw HTML string from JCR
      * @returns {string} Sanitized HTML string (text content preserved, dangerous markup removed)
@@ -83,32 +87,59 @@
         var tmp = document.createElement('div');
         tmp.innerHTML = html;
 
-        // Remove script and style elements entirely
-        var dangerous = tmp.querySelectorAll('script,style,iframe,object,embed,form,input,button,select,textarea,meta,link,base');
-        for (var i = dangerous.length - 1; i >= 0; i--) {
-            dangerous[i].parentNode.removeChild(dangerous[i]);
-        }
-
-        // Walk all elements and strip dangerous attributes
-        var allElements = tmp.getElementsByTagName('*');
-        var dangerousAttrs = /^(on\w+|style)$/i;
+        // Dangerous URL schemes for any href/src/action-like attribute
         var dangerousHref = /^\s*(javascript|vbscript|data)\s*:/i;
-        for (var j = 0; j < allElements.length; j++) {
-            var el = allElements[j];
-            var attrs = Array.prototype.slice.call(el.attributes);
-            for (var k = 0; k < attrs.length; k++) {
-                var attrName = attrs[k].name;
-                var attrValue = attrs[k].value;
-                if (dangerousAttrs.test(attrName)) {
-                    el.removeAttribute(attrName);
-                } else if ((attrName === 'href' || attrName === 'src' || attrName === 'action') && dangerousHref.test(attrValue)) {
-                    el.removeAttribute(attrName);
+        // Event-handler attributes, inline style, and known scriptable attributes
+        var dangerousAttrs = /^(on\w+|style|formaction|srcdoc|background|dynsrc|lowsrc)$/i;
+        // URL-bearing attributes (includes SVG xlink:href, used for javascript: vectors)
+        var urlAttrs = /^(href|src|action|formaction|xlink:href|poster|data)$/i;
+
+        function cleanse() {
+            // Remove element types that are scriptable or carry event/SVG/MathML surfaces
+            var dangerous = tmp.querySelectorAll(
+                'script,style,iframe,object,embed,form,input,button,select,textarea,' +
+                'meta,link,base,svg,math,template,frame,frameset,applet,marquee'
+            );
+            var removed = false;
+            for (var i = dangerous.length - 1; i >= 0; i--) {
+                if (dangerous[i].parentNode) {
+                    dangerous[i].parentNode.removeChild(dangerous[i]);
+                    removed = true;
                 }
             }
+
+            // Walk all remaining elements and strip dangerous attributes
+            var allElements = tmp.getElementsByTagName('*');
+            for (var j = 0; j < allElements.length; j++) {
+                var el = allElements[j];
+                var attrs = Array.prototype.slice.call(el.attributes);
+                for (var k = 0; k < attrs.length; k++) {
+                    var attrName = attrs[k].name;
+                    var attrValue = attrs[k].value;
+                    if (dangerousAttrs.test(attrName)) {
+                        el.removeAttribute(attrName);
+                        removed = true;
+                    } else if (urlAttrs.test(attrName) && dangerousHref.test(attrValue)) {
+                        el.removeAttribute(attrName);
+                        removed = true;
+                    }
+                }
+            }
+            return removed;
+        }
+
+        // Recurse after removals: stripping nodes/attributes can reveal new
+        // dangerous surfaces that the previous pass did not visit.
+        var guard = 0;
+        while (cleanse() && guard < 10) {
+            guard++;
         }
 
         return tmp.innerHTML;
     }
+
+    // Accessible name for the close button, resolved server-side from i18n bundle.
+    var FRO_CLOSE_LABEL = '<fmt:message key="full_read_only_notifier.close"/>';
 
     /**
      * Display an inline notification banner above the page content.
@@ -118,48 +149,79 @@
     function froShowNotification(html) {
         var banner = document.createElement('div');
         banner.setAttribute("id", "froBanner");
+        // Announce to assistive technology. The message is informational (not an
+        // error), so use a polite status region rather than an assertive alert.
+        banner.setAttribute('role', 'status');
+        banner.setAttribute('aria-live', 'polite');
+        banner.setAttribute('tabindex', '-1');
+        banner.setAttribute('lang', document.documentElement.lang || 'en');
         banner.style.cssText = [
             'position:fixed',
             'top:16px',
             'right:16px',
             'z-index:9999',
-            'max-width:360px',
-            'padding:12px 40px 12px 16px',
-            'color:#3a87ad',
-            'background-color:#d9edf7',
-            'border:1px solid #bce8f1',
+            'max-width:min(360px, calc(100vw - 32px))',
+            'padding:12px 56px 12px 16px',
+            'color:#0b3a52',
+            'background-color:#e8f4fd',
+            'border:1px solid #0b3a52',
             'border-radius:6px',
             'font-family:sans-serif',
             'font-size:14px',
             'line-height:1.5',
-            'box-shadow:0 2px 8px rgba(0,0,0,0.15)'
+            'box-shadow:0 2px 8px rgba(0,0,0,0.15)',
+            'outline:none'
         ].join(';');
 
         var content = document.createElement('div');
         content.innerHTML = froSanitize(html);
 
+        function dismiss() {
+            if (banner.parentNode) {
+                banner.parentNode.removeChild(banner);
+            }
+            document.removeEventListener('keydown', onKeyDown);
+        }
+
+        function onKeyDown(e) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                dismiss();
+            }
+        }
+
         var close = document.createElement('button');
+        close.setAttribute('type', 'button');
         close.innerHTML = '&times;';
+        close.setAttribute('aria-label', FRO_CLOSE_LABEL);
+        close.setAttribute('title', FRO_CLOSE_LABEL);
         close.style.cssText = [
             'position:absolute',
-            'top:50%',
-            'right:12px',
-            'transform:translateY(-50%)',
+            'top:8px',
+            'right:8px',
+            'display:flex',
+            'align-items:center',
+            'justify-content:center',
+            'min-width:44px',
+            'min-height:44px',
             'background:none',
             'border:none',
             'font-size:20px',
             'line-height:1',
-            'color:#3a87ad',
+            'color:#0b3a52',
             'cursor:pointer',
-            'padding:0'
+            'padding:8px'
         ].join(';');
-        close.addEventListener('click', function () {
-            document.body.removeChild(banner);
-        });
+        close.addEventListener('click', dismiss);
 
         banner.appendChild(content);
         banner.appendChild(close);
         document.body.appendChild(banner);
+
+        // Dismiss on Escape from anywhere while the banner is shown.
+        document.addEventListener('keydown', onKeyDown);
+
+        // Move focus to the banner so keyboard / AT users reach it immediately.
+        banner.focus();
     }
 </script>
 
@@ -196,7 +258,7 @@
                 var cookie = getCookie('full_read_only');
                 if (cookie === null) {
                     froShowNotification(document.getElementById('fron-content-on').innerHTML);
-                    setCookie('full_read_only', 'Y', {expires: 1});
+                    setCookie('full_read_only', 'Y', 1);
                 }
             });
         </script>

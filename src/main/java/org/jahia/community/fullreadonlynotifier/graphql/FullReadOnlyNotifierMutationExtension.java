@@ -89,7 +89,7 @@ public class FullReadOnlyNotifierMutationExtension {
      * Package-private seam for unit testing: performs the actual JCR write without going
      * through the static {@link JCRTemplate#getInstance()} lookup.
      *
-     * <p>TODO: Replace the static JCRTemplate lookup in the public method with an OSGi
+     * <p>NOTE (deferred): Replace the static JCRTemplate lookup in the public method with an OSGi
      * {@code @Reference}-injected service field to make the full call path testable without
      * this seam. Deferred to avoid a larger service-layer rearchitecture at this time.
      *

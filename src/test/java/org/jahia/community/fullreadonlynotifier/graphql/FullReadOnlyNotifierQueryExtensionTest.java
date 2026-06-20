@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
  *
  * <p>Tests target the package-private {@code readSettings} seam to avoid the static
  * {@code JCRTemplate.getInstance()} call that cannot be mocked without a running OSGi
- * container. See the TODO in the production class for the deferred refactor.
+ * container. See the deferred-refactor note in the production class.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class FullReadOnlyNotifierQueryExtensionTest {

@@ -154,8 +154,8 @@ describe('Full Read-Only Notifier Popup', () => {
         cy.setCookie(COOKIE_NAME, 'Y');
         cy.visit(WEBSITE_PATH);
         cy.contains('The website is no longer in read-only mode.');
-        cy.get('div:nth-child(2) > button').click();
-        cy.get('[id="froBanner"]').should('not.exist');
+        cy.get(BANNER).find('button').click();
+        cy.get(BANNER).should('not.exist');
     });
 
     it('shows the correct configured contentOff text in the "off" notification', () => {
