@@ -1,5 +1,4 @@
 import { DocumentNode } from 'graphql'
-import { executeGroovy } from '@jahia/cypress'
 
 // Digitall website page where the component will be placed
 const WEBSITE_PATH = '/sites/digitall/home.html'
@@ -20,17 +19,25 @@ const BANNER = '[id="froBanner"]'
 // Server-mode helpers
 // ---------------------------------------------------------------------------
 
-/** Put the Jahia server into full read-only mode via a Groovy provisioning script.
- *  If your Jahia version uses a different API, update the fixture files at:
- *    tests/cypress/fixtures/groovy/enableReadOnly.groovy
- *    tests/cypress/fixtures/groovy/disableReadOnly.groovy
+/** Toggle Jahia FULL read-only mode via the tools maintenance endpoint
+ *  (the same mechanism as the UI link maintenance.jsp?fullReadOnlyMode=true).
+ *  This is what drives renderContext.readOnlyStatus, which the JSP branches on.
  */
+function setFullReadOnly(enabled: boolean) {
+    cy.request({
+        method: 'GET',
+        url: `/modules/tools/maintenance.jsp?fullReadOnlyMode=${enabled}`,
+        auth: { user: 'root', pass: Cypress.env('SUPER_USER_PASSWORD') },
+        failOnStatusCode: false,
+    })
+}
+
 function enableReadOnly() {
-    executeGroovy('groovy/enableReadOnly.groovy', {})
+    setFullReadOnly(true)
 }
 
 function disableReadOnly() {
-    executeGroovy('groovy/disableReadOnly.groovy', {})
+    setFullReadOnly(false)
 }
 
 // ---------------------------------------------------------------------------
@@ -62,6 +69,13 @@ describe('Full Read-Only Notifier Popup', () => {
                 contentOff: '<p>The website is no longer in read-only mode.</p>',
                 contentOn: '<p>The website is currently in <strong>read-only mode</strong>.</p>',
             },
+        })
+
+        // Publish the site-level settings node so the LIVE popup reads the
+        // configured content (the mutation writes to EDIT only).
+        cy.apollo({
+            mutation: publishNode,
+            variables: { path: `/sites/${siteKey}/fronotifier` },
         })
 
         // Remove any component node left over from a previous run (best-effort:
