@@ -1,0 +1,18 @@
+{
+  "label": "Notificateur de lecture seule totale",
+  "settings": {
+    "title": "Notificateur de lecture seule totale",
+    "intro": "Configurez les messages affichés aux utilisateurs lorsque le site est placé en mode lecture seule totale ou rétabli en fonctionnement normal.",
+    "contentOff": "Message lorsque le mode lecture seule totale est désactivé",
+    "contentOn": "Message lorsque le mode lecture seule totale est activé",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "cancel": "Annuler",
+    "cancelled": "Modifications annulées.",
+    "saved": "Paramètres enregistrés avec succès.",
+    "saveError": "Échec de l'enregistrement des paramètres. Veuillez réessayer.",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "noSiteKey": "Aucun site sélectionné. Ouvrez ce panneau depuis l'administration d'un site pour configurer le notificateur."
+  }
+}

@@ -103,7 +103,8 @@ public class FronotifierConstantsTest {
         }
 
         // Act + Assert
+        final String longKey = sb.toString();
         assertThrows(IllegalArgumentException.class,
-                () -> FronotifierConstants.requireValidSiteKey(sb.toString()));
+                () -> FronotifierConstants.requireValidSiteKey(longKey));
     }
 }

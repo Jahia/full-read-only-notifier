@@ -13,5 +13,4 @@ export default function () {
         isSelectable: true,
         render: () => React.createElement(FullReadOnlyNotifier)
     });
-
 }

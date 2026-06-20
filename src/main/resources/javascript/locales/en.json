@@ -12,6 +12,7 @@
     "saved": "Settings saved successfully.",
     "saveError": "Failed to save settings. Please try again.",
     "loading": "Loading...",
-    "error": "Error"
+    "error": "Error",
+    "noSiteKey": "No site selected. Open this panel from a site's administration to configure the notifier."
   }
 }

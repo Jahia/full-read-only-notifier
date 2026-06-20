@@ -92,3 +92,27 @@ mvn clean install
 ```
 
 The Maven build installs Node/Yarn automatically, bundles the React admin panel via Webpack, and packages everything into an OSGi JAR.
+
+## Known Limitations and Deferred Work
+
+### Architecture: static JCRTemplate lookup
+
+`FullReadOnlyNotifierQueryExtension` and `FullReadOnlyNotifierMutationExtension` both obtain
+the JCR session via `JCRTemplate.getInstance()` — a static factory call inherited from the
+original implementation. This makes the top-level GraphQL methods untestable without a running
+OSGi container.
+
+**Deferred fix**: inject `JCRTemplate` (or a thin wrapper) as an OSGi `@Reference` field so
+the full call path can be unit-tested without the package-private seam. This requires adding a
+small service-layer abstraction and is deferred to avoid a larger rearchitecture in the current
+patch release. The `readSettings` / `writeSettings` package-private helpers introduced in
+`2.0.4-SNAPSHOT` provide coverage in the meantime.
+
+### HTML sanitization
+
+Admin-authored HTML (`contentOn` / `contentOff`) is sanitized server-side at write time using
+Jsoup's `Safelist.relaxed()` allowlist extended with `class`, `style`, `target`, and `rel`
+attributes. This strips `<script>`, inline event handlers, and `javascript:` URIs.
+
+The JSP rendering layer applies an additional output-side control. Both controls must be
+maintained independently as defence-in-depth.

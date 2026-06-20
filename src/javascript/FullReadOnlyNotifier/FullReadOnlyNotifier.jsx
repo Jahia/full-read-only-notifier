@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {ApolloClient, ApolloProvider, InMemoryCache, useMutation, useQuery} from '@apollo/client';
 import {Button, Field} from '@jahia/moonstone';
 import {CKEditor} from '@ckeditor/ckeditor5-react';
@@ -64,7 +64,18 @@ const client = new ApolloClient({
     credentials: 'same-origin'
 });
 
-const editorConfig = {
+// Delay (ms) before the live-region message is set after a save resolves.
+// Kept minimal; the remount key (see liveKey) is what guarantees the
+// announcement, so this is only a small buffer to let React commit the reset.
+const LIVE_REGION_ANNOUNCE_DELAY_MS = 50;
+
+// Builds the CKEditor configuration. It is parameterised by the UI language and
+// a per-instance accessible toolbar label so the two editors are distinguishable
+// to assistive technology. IMPORTANT: this object must NOT be recreated on every
+// keystroke — callers memoise it (useMemo keyed on i18n.language), because
+// re-passing a new config object to <CKEditor> would tear down and rebuild the
+// editor instance and lose focus/selection.
+const buildEditorConfig = (language, toolbarAriaLabel) => ({
     licenseKey: 'GPL',
     plugins: [Alignment,
         Autoformat,
@@ -142,7 +153,10 @@ const editorConfig = {
             '|',
             'sourceEditing'
         ],
-        shouldNotGroupWhenFull: true
+        shouldNotGroupWhenFull: true,
+        // Distinct accessible name so screen readers can tell the two editor
+        // toolbars apart (one for the "off" message, one for the "on" message).
+        ariaLabel: toolbarAriaLabel
     },
     menuBar: {isVisible: false},
     heading: {
@@ -153,7 +167,7 @@ const editorConfig = {
             {model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4'}
         ]
     },
-    language: 'en',
+    language,
     image: {
         resizeUnit: 'px',
         toolbar: [
@@ -230,9 +244,9 @@ const editorConfig = {
             }
         }
     }
-};
+});
 
-const getSiteKey = () => {
+export const getSiteKey = () => {
     const parts = window.location.pathname
         .replace(/^\/jahia\/administration\//, '')
         .split('/')
@@ -240,22 +254,57 @@ const getSiteKey = () => {
     return parts.length > 0 ? parts[0] : null;
 };
 
-const FronotifierForm = () => {
-    const {t} = useTranslation('full-read-only-notifier');
+const ERROR_REGION_ID = 'fron-error-region';
+const CONTENT_OFF_LABEL_ID = 'fron-label-content-off';
+const CONTENT_ON_LABEL_ID = 'fron-label-content-on';
+
+export const FronotifierForm = () => {
+    const {t, i18n} = useTranslation('full-read-only-notifier');
     const siteKey = getSiteKey();
+
+    // Memoise the two editor configs so they are stable across keystrokes and
+    // only rebuilt when the UI language changes. Each gets a distinct toolbar
+    // accessible name so screen readers can tell the two editors apart.
+    const editorConfigOff = useMemo(
+        () => buildEditorConfig(i18n.language, t('settings.contentOff')),
+        [i18n.language, t]
+    );
+    const editorConfigOn = useMemo(
+        () => buildEditorConfig(i18n.language, t('settings.contentOn')),
+        [i18n.language, t]
+    );
+
     const {data, loading, error} = useQuery(GET_FRONOTIFIER_SETTINGS, {
         variables: {siteKey},
+        // Skip the query entirely when the site key is missing — siteKey is
+        // String! so firing with null would error at the GraphQL layer.
+        skip: !siteKey,
         fetchPolicy: 'network-only'
     });
     const [contentOff, setContentOff] = useState('');
     const [contentOn, setContentOn] = useState('');
     const [saveStatus, setSaveStatus] = useState(null);
-    const [politeMsg, setPoliteMsg] = useState('');
-    const [assertiveMsg, setAssertiveMsg] = useState('');
+    // Single stable live-region message. liveKey increments on every save/cancel
+    // so React remounts the region and the message is reliably re-announced,
+    // instead of the clear-then-set-after-timeout dance.
+    const [liveMsg, setLiveMsg] = useState('');
+    const [liveKey, setLiveKey] = useState(0);
     const [updateSettings, {loading: saving}] = useMutation(UPDATE_FRONOTIFIER_SETTINGS);
     const editorOffRef = useRef(null);
     const editorOnRef = useRef(null);
-    const errorRegionId = 'fron-error-region';
+    const headingRef = useRef(null);
+    const mountedRef = useRef(true);
+    const announceTimerRef = useRef(null);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            if (announceTimerRef.current) {
+                clearTimeout(announceTimerRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (data?.fronotifierSettings) {
@@ -270,16 +319,49 @@ const FronotifierForm = () => {
         document.title = t('settings.title');
     }, [t]);
 
+    // Move focus to the heading once the form is rendered (after loading
+    // resolves) so keyboard/screen-reader users land at the top of the panel.
+    useEffect(() => {
+        if (!loading && !error && siteKey && headingRef.current) {
+            headingRef.current.focus();
+        }
+    }, [loading, error, siteKey]);
+
     useEffect(() => {
         const invalid = saveStatus === 'error' ? 'true' : 'false';
         [editorOffRef, editorOnRef].forEach(ref => {
             if (ref.current) {
                 ref.current.editing.view.change(writer => {
-                    writer.setAttribute('aria-invalid', invalid, ref.current.editing.view.document.getRoot());
+                    const root = ref.current.editing.view.document.getRoot();
+                    writer.setAttribute('aria-invalid', invalid, root);
+                    if (saveStatus === 'error') {
+                        writer.setAttribute('aria-errormessage', ERROR_REGION_ID, root);
+                    } else {
+                        writer.removeAttribute('aria-errormessage', root);
+                    }
                 });
             }
         });
     }, [saveStatus]);
+
+    // Announce a live-region message after a short, named delay, guarding
+    // against the component being unmounted before the timer fires.
+    const announce = message => {
+        if (announceTimerRef.current) {
+            clearTimeout(announceTimerRef.current);
+        }
+
+        announceTimerRef.current = setTimeout(() => {
+            if (mountedRef.current) {
+                setLiveMsg(message);
+                setLiveKey(key => key + 1);
+            }
+        }, LIVE_REGION_ANNOUNCE_DELAY_MS);
+    };
+
+    if (!siteKey) {
+        return <div className={styles.fron_error} role="alert">{t('settings.noSiteKey')}</div>;
+    }
 
     if (loading) {
         return <div className={styles.fron_loading} role="status">{t('settings.loading')}</div>;
@@ -294,21 +376,12 @@ const FronotifierForm = () => {
             const result = await updateSettings({variables: {siteKey, contentOff, contentOn}});
             const newStatus = result.data?.updateFronotifierSettings ? 'success' : 'error';
             setSaveStatus(newStatus);
-            if (newStatus === 'success') {
-                setAssertiveMsg('');
-                setPoliteMsg('');
-                requestAnimationFrame(() => setTimeout(() => setPoliteMsg(t('settings.saved')), 100));
-            } else {
-                setPoliteMsg('');
-                setAssertiveMsg('');
-                requestAnimationFrame(() => setTimeout(() => setAssertiveMsg(t('settings.saveError')), 100));
-            }
-        } catch (err) {
-            console.error('Failed to update Full Read-Only Notifier settings:', err);
+            announce(newStatus === 'success' ? t('settings.saved') : t('settings.saveError'));
+        } catch {
+            // Rely on the UI error state (saveStatus + live region) rather than
+            // logging to the console.
             setSaveStatus('error');
-            setPoliteMsg('');
-            setAssertiveMsg('');
-            requestAnimationFrame(() => setTimeout(() => setAssertiveMsg(t('settings.saveError')), 100));
+            announce(t('settings.saveError'));
         }
     };
 
@@ -326,22 +399,30 @@ const FronotifierForm = () => {
         }
 
         setSaveStatus(null);
-        setAssertiveMsg('');
-        setPoliteMsg('');
-        requestAnimationFrame(() => setTimeout(() => setPoliteMsg(t('settings.cancelled')), 100));
+        announce(t('settings.cancelled'));
     };
 
     return (
         <div className={styles.fron_wrapper}>
-            <div role="status" aria-live="polite" aria-atomic="true" className={styles.fron_sr_only}>
-                {politeMsg}
-            </div>
-            <div id={errorRegionId} role="alert" aria-live="assertive" aria-atomic="true" className={styles.fron_sr_only}>
-                {assertiveMsg}
+            {/*
+              * Stable status region. The key forces a remount on every save/cancel
+              * so assistive tech reliably re-announces the (possibly repeated) message.
+              */}
+            <output
+                key={liveKey}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className={styles.fron_sr_only}
+            >
+                {liveMsg}
+            </output>
+            <div id={ERROR_REGION_ID} role="alert" aria-live="assertive" aria-atomic="true" className={styles.fron_sr_only}>
+                {saveStatus === 'error' ? t('settings.saveError') : ''}
             </div>
 
             <div className={styles.fron_page_header}>
-                <h2>{t('settings.title')} - {siteKey}</h2>
+                <h2 ref={headingRef} tabIndex={-1}>{t('settings.title')} - {siteKey}</h2>
             </div>
             <div className={styles.fron_container}>
                 <div className={styles.fron_intro}>
@@ -361,27 +442,28 @@ const FronotifierForm = () => {
 
                 <div className={styles.fron_form}>
                     {/*
-                      * CKEditor renders a contenteditable div; Field's htmlFor cannot associate with
-                      * a contenteditable, so we omit the id prop and set aria-label on the editor
-                      * editable via the onReady callback instead.
+                      * CKEditor renders a contenteditable div; Field's htmlFor cannot associate
+                      * with a contenteditable, so we expose a real visible label element with a
+                      * stable id and point the editable at it via aria-labelledby (set in onReady).
                       */}
-                    <Field label={t('settings.contentOff')}>
+                    <Field label={<span id={CONTENT_OFF_LABEL_ID}>{t('settings.contentOff')}</span>}>
                         <div
                             className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}
                             {...(saving ? {inert: ''} : {})}
                         >
                             <CKEditor
                                 editor={ClassicEditor}
-                                config={editorConfig}
+                                config={editorConfigOff}
                                 disabled={saving}
                                 data={contentOff}
                                 onReady={editor => {
                                     editorOffRef.current = editor;
                                     editor.editing.view.change(writer => {
                                         const root = editor.editing.view.document.getRoot();
+                                        writer.setAttribute('aria-labelledby', CONTENT_OFF_LABEL_ID, root);
                                         writer.setAttribute('aria-label', t('settings.contentOff'), root);
                                         writer.setAttribute('aria-required', 'true', root);
-                                        writer.setAttribute('aria-describedby', errorRegionId, root);
+                                        writer.setAttribute('aria-describedby', ERROR_REGION_ID, root);
                                     });
                                 }}
                                 onChange={(event, editor) => setContentOff(editor.getData())}
@@ -389,23 +471,24 @@ const FronotifierForm = () => {
                         </div>
                     </Field>
 
-                    <Field label={t('settings.contentOn')}>
+                    <Field label={<span id={CONTENT_ON_LABEL_ID}>{t('settings.contentOn')}</span>}>
                         <div
                             className={`${styles.fron_editor} ${saving ? styles['fron_editor--disabled'] : ''}`}
                             {...(saving ? {inert: ''} : {})}
                         >
                             <CKEditor
                                 editor={ClassicEditor}
-                                config={editorConfig}
+                                config={editorConfigOn}
                                 disabled={saving}
                                 data={contentOn}
                                 onReady={editor => {
                                     editorOnRef.current = editor;
                                     editor.editing.view.change(writer => {
                                         const root = editor.editing.view.document.getRoot();
+                                        writer.setAttribute('aria-labelledby', CONTENT_ON_LABEL_ID, root);
                                         writer.setAttribute('aria-label', t('settings.contentOn'), root);
                                         writer.setAttribute('aria-required', 'true', root);
-                                        writer.setAttribute('aria-describedby', errorRegionId, root);
+                                        writer.setAttribute('aria-describedby', ERROR_REGION_ID, root);
                                     });
                                 }}
                                 onChange={(event, editor) => setContentOn(editor.getData())}

@@ -111,6 +111,20 @@
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <!-- jsoup: HTML allowlist sanitizer used by FullReadOnlyNotifierMutationExtension
+                 to strip unsafe tags/attributes from admin-authored rich-text before JCR storage.
+                 Jahia ships jsoup in its core OSGi runtime; provided scope keeps it off the bundle classpath. -->
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.18.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>4.11.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -171,6 +185,12 @@
                 <configuration>
                     <instructions>
                         <_dsannotations>org.jahia.community.fullreadonlynotifier.*</_dsannotations>
+                        <!-- Embed jsoup inside the bundle: Jahia does not export org.jsoup as an
+                             OSGi package, so importing it leaves the GraphQL extension class unable
+                             to load (its static Safelist field) and the mutation/query unregistered.
+                             Inlining jsoup (pure-JDK, no transitive deps) makes it bundle-private. -->
+                        <Embed-Dependency>jsoup;inline=true</Embed-Dependency>
+                        <Import-Package>!org.jsoup.*,*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
