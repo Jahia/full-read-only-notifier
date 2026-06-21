@@ -185,7 +185,7 @@ describe('Full Read-Only Notifier Popup', () => {
         cy.visit(WEBSITE_PATH)
 
         cy.apollo({ query: getFronotifierSettings, variables: { siteKey } })
-            .its('data.fronotifierSettings.contentOff')
+            .its('data.fullReadOnlyNotifier.settings.contentOff')
             .then((html: string) => {
                 cy.get(BANNER).should('contain.text', html.replace(/<[^>]+>/g, ''))
             })
@@ -248,7 +248,7 @@ describe('Full Read-Only Notifier Popup', () => {
         cy.visit(WEBSITE_PATH)
 
         cy.apollo({ query: getFronotifierSettings, variables: { siteKey } })
-            .its('data.fronotifierSettings.contentOn')
+            .its('data.fullReadOnlyNotifier.settings.contentOn')
             .then((html: string) => {
                 const tmp = document.createElement('div')
                 tmp.innerHTML = html

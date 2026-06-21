@@ -1,3 +1,5 @@
 mutation UpdateFronotifierSettings($siteKey: String!, $contentOff: String!, $contentOn: String!) {
-    updateFronotifierSettings(siteKey: $siteKey, contentOff: $contentOff, contentOn: $contentOn)
+    fullReadOnlyNotifier {
+        updateSettings(siteKey: $siteKey, contentOff: $contentOff, contentOn: $contentOn)
+    }
 }

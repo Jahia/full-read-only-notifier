@@ -17,7 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link FullReadOnlyNotifierQueryExtension#readSettings}.
+ * Unit tests for {@link FullReadOnlyNotifierQuery#readSettings}.
  *
  * <p>Tests target the package-private {@code readSettings} seam to avoid the static
  * {@code JCRTemplate.getInstance()} call that cannot be mocked without a running OSGi
@@ -58,7 +58,7 @@ public class FullReadOnlyNotifierQueryExtensionTest {
         when(froNode.getPropertyAsString(FronotifierConstants.PROP_CONTENT_ON)).thenReturn("<p>On message</p>");
 
         // Act
-        GqlFronotifierSettings result = FullReadOnlyNotifierQueryExtension.readSettings(session, SITE_KEY);
+        GqlFronotifierSettings result = FullReadOnlyNotifierQuery.readSettings(session, SITE_KEY);
 
         // Assert
         assertNotNull(result);
@@ -79,7 +79,7 @@ public class FullReadOnlyNotifierQueryExtensionTest {
         when(froNode.hasProperty(FronotifierConstants.PROP_CONTENT_ON)).thenReturn(false);
 
         // Act
-        GqlFronotifierSettings result = FullReadOnlyNotifierQueryExtension.readSettings(session, SITE_KEY);
+        GqlFronotifierSettings result = FullReadOnlyNotifierQuery.readSettings(session, SITE_KEY);
 
         // Assert
         assertEquals("", result.getContentOff());
@@ -96,7 +96,7 @@ public class FullReadOnlyNotifierQueryExtensionTest {
         when(siteNode.hasNode(FronotifierConstants.FRONOTIFIER)).thenReturn(false);
 
         // Act
-        GqlFronotifierSettings result = FullReadOnlyNotifierQueryExtension.readSettings(session, SITE_KEY);
+        GqlFronotifierSettings result = FullReadOnlyNotifierQuery.readSettings(session, SITE_KEY);
 
         // Assert — defaults returned
         assertEquals("", result.getContentOff());
@@ -120,7 +120,7 @@ public class FullReadOnlyNotifierQueryExtensionTest {
         when(session.getNode(SITE_PATH)).thenThrow(new PathNotFoundException(SITE_PATH));
 
         // Act
-        GqlFronotifierSettings result = FullReadOnlyNotifierQueryExtension.readSettings(session, SITE_KEY);
+        GqlFronotifierSettings result = FullReadOnlyNotifierQuery.readSettings(session, SITE_KEY);
 
         // Assert — clean defaults, no exception propagated
         assertNotNull(result);
