@@ -36,7 +36,7 @@ describe('FronotifierForm', () => {
     beforeEach(() => {
         setPathname('/jahia/administration/digitall/fullReadOnlyNotifierManager');
         apollo.useQuery.mockReturnValue({
-            data: {fronotifierSettings: {contentOff: '', contentOn: ''}},
+            data: {fullReadOnlyNotifier: {settings: {contentOff: '', contentOn: ''}}},
             loading: false,
             error: undefined
         });
@@ -57,7 +57,7 @@ describe('FronotifierForm', () => {
 
     it('announces success when the mutation resolves truthy', async () => {
         // Arrange
-        const mutate = jest.fn().mockResolvedValue({data: {updateFronotifierSettings: true}});
+        const mutate = jest.fn().mockResolvedValue({data: {fullReadOnlyNotifier: {updateSettings: true}}});
         apollo.useMutation.mockReturnValue([mutate, {loading: false}]);
         render(<FronotifierForm/>);
 
@@ -75,7 +75,7 @@ describe('FronotifierForm', () => {
 
     it('announces an error when the mutation resolves falsy', async () => {
         // Arrange
-        const mutate = jest.fn().mockResolvedValue({data: {updateFronotifierSettings: false}});
+        const mutate = jest.fn().mockResolvedValue({data: {fullReadOnlyNotifier: {updateSettings: false}}});
         apollo.useMutation.mockReturnValue([mutate, {loading: false}]);
         render(<FronotifierForm/>);
 

@@ -18,7 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link FullReadOnlyNotifierMutationExtension}.
+ * Unit tests for {@link FullReadOnlyNotifierMutation}.
  *
  * <p>Tests target the package-private {@code writeSettings} and {@code sanitizeContent}
  * seams to avoid the static {@code JCRTemplate.getInstance()} call. See the
@@ -57,7 +57,7 @@ public class FullReadOnlyNotifierMutationExtensionTest {
         when(siteNode.getNode(FronotifierConstants.FRONOTIFIER)).thenReturn(froNode);
 
         // Act
-        boolean result = FullReadOnlyNotifierMutationExtension.writeSettings(
+        boolean result = FullReadOnlyNotifierMutation.writeSettings(
                 session, SITE_KEY, CONTENT_OFF, CONTENT_ON);
 
         // Assert
@@ -79,7 +79,7 @@ public class FullReadOnlyNotifierMutationExtensionTest {
                 FronotifierConstants.FRONOTIFIER_NODE_TYPE)).thenReturn(froNode);
 
         // Act
-        boolean result = FullReadOnlyNotifierMutationExtension.writeSettings(
+        boolean result = FullReadOnlyNotifierMutation.writeSettings(
                 session, SITE_KEY, CONTENT_OFF, CONTENT_ON);
 
         // Assert
@@ -103,7 +103,7 @@ public class FullReadOnlyNotifierMutationExtensionTest {
 
         // Act + Assert
         IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> FullReadOnlyNotifierMutationExtension.writeSettings(
+                () -> FullReadOnlyNotifierMutation.writeSettings(
                         session, SITE_KEY, CONTENT_OFF, CONTENT_ON));
 
         // The message must contain the safe site key but must NOT contain the raw JCR path
@@ -141,7 +141,7 @@ public class FullReadOnlyNotifierMutationExtensionTest {
 
         // Act + Assert
         assertThrows(IllegalArgumentException.class,
-                () -> FullReadOnlyNotifierMutationExtension.sanitizeContent(oversized, "contentOff"));
+                () -> FullReadOnlyNotifierMutation.sanitizeContent(oversized, "contentOff"));
     }
 
     @Test
@@ -150,7 +150,7 @@ public class FullReadOnlyNotifierMutationExtensionTest {
         final String input = "<p>Hello <b>world</b></p>";
 
         // Act
-        String result = FullReadOnlyNotifierMutationExtension.sanitizeContent(input, "contentOff");
+        String result = FullReadOnlyNotifierMutation.sanitizeContent(input, "contentOff");
 
         // Assert — content is preserved (jsoup may normalise whitespace but keeps the text)
         assertTrue("Sanitized result should contain the text", result.contains("Hello"));
@@ -167,7 +167,7 @@ public class FullReadOnlyNotifierMutationExtensionTest {
         final String malicious = "<p>Hello</p><script>alert('xss')</script>";
 
         // Act
-        String result = FullReadOnlyNotifierMutationExtension.sanitizeContent(malicious, "contentOn");
+        String result = FullReadOnlyNotifierMutation.sanitizeContent(malicious, "contentOn");
 
         // Assert
         assertTrue("script tag must be removed", !result.contains("<script>"));
@@ -181,7 +181,7 @@ public class FullReadOnlyNotifierMutationExtensionTest {
         final String malicious = "<a href=\"javascript:alert(1)\">click</a>";
 
         // Act
-        String result = FullReadOnlyNotifierMutationExtension.sanitizeContent(malicious, "contentOff");
+        String result = FullReadOnlyNotifierMutation.sanitizeContent(malicious, "contentOff");
 
         // Assert — href with javascript: must be removed
         assertTrue("javascript: href must be stripped", !result.contains("javascript:"));
@@ -193,7 +193,7 @@ public class FullReadOnlyNotifierMutationExtensionTest {
         final String malicious = "<p onclick=\"alert(1)\">text</p>";
 
         // Act
-        String result = FullReadOnlyNotifierMutationExtension.sanitizeContent(malicious, "contentOn");
+        String result = FullReadOnlyNotifierMutation.sanitizeContent(malicious, "contentOn");
 
         // Assert
         assertTrue("onclick handler must be stripped", !result.contains("onclick"));
@@ -202,7 +202,7 @@ public class FullReadOnlyNotifierMutationExtensionTest {
     @Test
     public void sanitizeContent_null_returnsEmptyString() {
         // Act
-        String result = FullReadOnlyNotifierMutationExtension.sanitizeContent(null, "contentOff");
+        String result = FullReadOnlyNotifierMutation.sanitizeContent(null, "contentOff");
 
         // Assert
         assertEquals("", result);

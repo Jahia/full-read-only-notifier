@@ -307,9 +307,9 @@ export const FronotifierForm = () => {
     }, []);
 
     useEffect(() => {
-        if (data?.fronotifierSettings) {
-            const off = data.fronotifierSettings.contentOff || '';
-            const on = data.fronotifierSettings.contentOn || '';
+        if (data?.fullReadOnlyNotifier?.settings) {
+            const off = data.fullReadOnlyNotifier.settings.contentOff || '';
+            const on = data.fullReadOnlyNotifier.settings.contentOn || '';
             setContentOff(off);
             setContentOn(on);
         }
@@ -374,7 +374,7 @@ export const FronotifierForm = () => {
     const handleSave = async () => {
         try {
             const result = await updateSettings({variables: {siteKey, contentOff, contentOn}});
-            const newStatus = result.data?.updateFronotifierSettings ? 'success' : 'error';
+            const newStatus = result.data?.fullReadOnlyNotifier?.updateSettings ? 'success' : 'error';
             setSaveStatus(newStatus);
             announce(newStatus === 'success' ? t('settings.saved') : t('settings.saveError'));
         } catch {
@@ -386,8 +386,8 @@ export const FronotifierForm = () => {
     };
 
     const handleCancel = () => {
-        const off = data?.fronotifierSettings?.contentOff || '';
-        const on = data?.fronotifierSettings?.contentOn || '';
+        const off = data?.fullReadOnlyNotifier?.settings?.contentOff || '';
+        const on = data?.fullReadOnlyNotifier?.settings?.contentOn || '';
         setContentOff(off);
         setContentOn(on);
         if (editorOffRef.current && editorOffRef.current.getData() !== off) {

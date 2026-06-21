@@ -83,10 +83,10 @@ describe('Full Read-Only Notifier Settings', () => {
                 contentOff: '<p>Read-only mode is <strong>off</strong>.</p>',
                 contentOn: '<p>Site is in <em>read-only</em> mode.</p>'
             }
-        }).its('data.updateFronotifierSettings').should('be.true');
+        }).its('data.fullReadOnlyNotifier.updateSettings').should('be.true');
 
         cy.apollo({query: getFronotifierSettings, variables: {siteKey}})
-            .its('data.fronotifierSettings')
+            .its('data.fullReadOnlyNotifier.settings')
             .should((settings: Record<string, string>) => {
                 expect(settings.contentOff).to.include('Read-only mode is');
                 expect(settings.contentOn).to.include('Site is in');
@@ -112,7 +112,7 @@ describe('Full Read-Only Notifier Settings', () => {
 
         // Verify persistence via GraphQL
         cy.apollo({query: getFronotifierSettings, variables: {siteKey}})
-            .its('data.fronotifierSettings')
+            .its('data.fullReadOnlyNotifier.settings')
             .should((settings: Record<string, string>) => {
                 expect(settings.contentOff).to.include('Deactivated message');
                 expect(settings.contentOn).to.include('Activated message');
@@ -209,7 +209,7 @@ describe('Full Read-Only Notifier Settings', () => {
         cy.contains('Settings saved successfully.').should('be.visible');
 
         cy.apollo({query: getFronotifierSettings, variables: {siteKey}})
-            .its('data.fronotifierSettings')
+            .its('data.fullReadOnlyNotifier.settings')
             .should((settings: Record<string, string | null>) => {
                 expect(settings.contentOff || '').to.be.empty;
                 expect(settings.contentOn || '').to.be.empty;
