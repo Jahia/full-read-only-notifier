@@ -25,12 +25,17 @@ const BANNER = '[id="froBanner"]'
 // GraphQL setValue) bypasses that and stores hostile markup. The render layer
 // must therefore NEVER emit the stored value into an executable context.
 //
-// The fix emits the value as HTML-escaped TEXT and recovers it via .textContent
-// + froSanitize() before injecting it into the banner, so a <script> / <img
-// onerror> payload neither executes on initial page load nor reaches the banner.
+// The fix applies the SAME Jsoup allowlist at render time (fro:sanitizeHtml),
+// emits the result as escaped text, and recovers it via .textContent + the
+// froSanitize() defence-in-depth pass before banner injection. A <script> /
+// <img onerror> payload must neither execute on initial load nor reach the
+// banner, while benign text still renders.
 //
-// These specs write the payload via the RAW JCR mutation (bypassing the
-// sanitizer) and assert that no injected script ever runs.
+// This spec plants the payload via the RAW JCR mutation (bypassing the
+// sanitizer) and asserts that no injected script runs. It keeps to a SINGLE
+// content write + single visit (mirroring 02-fronotifierPopup), because Jahia
+// caches the rendered page: changing content between tests would serve a stale
+// page and is a test-isolation hazard, not a product behaviour.
 // ---------------------------------------------------------------------------
 
 function setFullReadOnly(enabled: boolean) {
@@ -48,6 +53,14 @@ const disableReadOnly = () => setFullReadOnly(false)
 describe('Full Read-Only Notifier — stored XSS regression (#19)', () => {
     const siteKey = 'digitall'
 
+    // A single payload combining the two classic breakout vectors plus benign text.
+    // window.__froXss is set only if the injected script/handler executes.
+    const BENIGN_TEXT = 'Scheduled read-only maintenance'
+    const XSS_PAYLOAD =
+        `<p>${BENIGN_TEXT}</p>` +
+        '<img src="x" onerror="window.__froXss = true">' +
+        '</div><script>window.__froXss = true<\/script>'
+
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const updateFronotifierSettings: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/updateFronotifierSettings.graphql')
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -59,54 +72,22 @@ describe('Full Read-Only Notifier — stored XSS regression (#19)', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const publishNode: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/publishNode.graphql')
 
-    // Write a raw (unsanitized) value into content_on, then publish so the LIVE
-    // page reads it. updateFronotifierSettings runs first only to guarantee the
-    // /sites/digitall/fronotifier node exists before we set the property.
-    function plantRawContentOn(payload: string) {
+    before(() => {
+        cy.login()
+
+        // Ensure the settings node exists, then write the hostile value DIRECTLY
+        // (raw JCR setValue), bypassing the mutation's Jsoup sanitizer.
         cy.apollo({
             mutation: updateFronotifierSettings,
             variables: { siteKey, contentOff: '', contentOn: '' },
         })
         cy.apollo({
             mutation: setRawFronotifierProperty,
-            variables: { path: FRONOTIFIER_PATH, property: 'content_on', value: payload },
+            variables: { path: FRONOTIFIER_PATH, property: 'content_on', value: XSS_PAYLOAD },
         })
         cy.apollo({ mutation: publishNode, variables: { path: FRONOTIFIER_PATH } })
-    }
 
-    // Visit with a fresh window flag; the payload's script/onerror would set it to true.
-    function visitAndAssertNoExecution() {
-        cy.clearCookie(COOKIE_NAME) // cookie ABSENT => content_on branch fires
-        cy.visit(WEBSITE_PATH, {
-            onBeforeLoad(win) {
-                ;(win as unknown as { __froXss?: boolean }).__froXss = undefined
-            },
-        })
-
-        // Banner renders => the notifier script ran and processed the payload.
-        cy.get(BANNER).should('be.visible')
-
-        // Give any (broken-image) error event a chance to fire before asserting.
-        // eslint-disable-next-line cypress/no-unnecessary-waiting
-        cy.wait(750)
-
-        cy.window().should((win) => {
-            expect((win as unknown as { __froXss?: boolean }).__froXss).to.be.undefined
-        })
-
-        // The banner must not contain executable surfaces either.
-        cy.get(BANNER).find('script').should('not.exist')
-        cy.get(BANNER)
-            .find('img')
-            .each(($img) => {
-                expect($img.attr('onerror')).to.be.undefined
-            })
-    }
-
-    before(() => {
-        cy.login()
-
-        // Best-effort cleanup of any leftover component node
+        // Best-effort cleanup of any leftover component node from a previous run
         cy.request({
             method: 'POST',
             url: '/modules/graphql',
@@ -118,23 +99,20 @@ describe('Full Read-Only Notifier — stored XSS regression (#19)', () => {
             log: false,
         })
 
-        // Place the notifier component on the page and publish so the popup
-        // script is injected into the LIVE home page.
+        // Place the notifier component on the page and publish the PARENT so the
+        // live home page is re-rendered (invalidating any cached copy) with the
+        // popup script injected.
         cy.apollo({
             mutation: addFronotifierComponent,
             variables: { parentPath: COMPONENT_PARENT, name: COMPONENT_NAME },
         })
         cy.apollo({ mutation: publishNode, variables: { path: COMPONENT_PARENT } })
-    })
 
-    afterEach(() => {
-        cy.clearCookie(COOKIE_NAME)
-        disableReadOnly()
+        enableReadOnly()
     })
 
     after(() => {
         disableReadOnly()
-        // Reset content and remove the component node
         cy.apollo({
             mutation: updateFronotifierSettings,
             variables: { siteKey, contentOff: '', contentOn: '' },
@@ -144,24 +122,42 @@ describe('Full Read-Only Notifier — stored XSS regression (#19)', () => {
         cy.apollo({ mutation: publishNode, variables: { path: COMPONENT_PARENT } })
     })
 
-    it('does not execute an <img onerror> payload stored via a raw JCR write', () => {
-        cy.login()
-        plantRawContentOn('<p>Maintenance notice</p><img src="x" onerror="window.__froXss = true">')
-        enableReadOnly()
-
-        visitAndAssertNoExecution()
-
-        // The benign text portion is still shown to the visitor.
-        cy.get(BANNER).should('contain.text', 'Maintenance notice')
+    afterEach(() => {
+        cy.clearCookie(COOKIE_NAME)
     })
 
-    it('does not execute a <script> breakout payload stored via a raw JCR write', () => {
+    it('neutralizes a raw-stored XSS payload (img onerror + script breakout) yet still renders benign text', () => {
         cy.login()
-        plantRawContentOn('<p>Hello</p></div><script>window.__froXss = true<\/script>')
-        enableReadOnly()
 
-        visitAndAssertNoExecution()
+        // cookie ABSENT => the content_on branch fires while in read-only mode
+        cy.clearCookie(COOKIE_NAME)
+        cy.visit(WEBSITE_PATH, {
+            onBeforeLoad(win) {
+                ;(win as unknown as { __froXss?: boolean }).__froXss = undefined
+            },
+        })
 
-        cy.get(BANNER).should('contain.text', 'Hello')
+        // The notifier script ran and rendered the banner (proves the inline
+        // <script> parsed — i.e. no markup truncated it) ...
+        cy.get(BANNER).should('be.visible')
+        // ... and the benign portion of the content is shown to the visitor.
+        cy.get(BANNER).should('contain.text', BENIGN_TEXT)
+
+        // Give any (broken-image) error event a chance to fire before asserting.
+        // eslint-disable-next-line cypress/no-unnecessary-waiting
+        cy.wait(750)
+
+        // The injected script/handler must NOT have executed.
+        cy.window().should((win) => {
+            expect((win as unknown as { __froXss?: boolean }).__froXss).to.be.undefined
+        })
+
+        // And no executable surface reached the banner DOM.
+        cy.get(BANNER).find('script').should('not.exist')
+        cy.get(BANNER)
+            .find('img')
+            .each(($img) => {
+                expect($img.attr('onerror')).to.be.undefined
+            })
     })
 })

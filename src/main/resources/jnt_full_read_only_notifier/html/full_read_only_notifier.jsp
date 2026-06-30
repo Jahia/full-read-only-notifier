@@ -146,7 +146,8 @@
     /**
      * Accessible name for the close button. Read from a server-rendered hidden element
      * (#fro-close-label) via .textContent rather than emitted into a JS string literal, so an
-     * i18n value containing a quote or </script> cannot break out of this script context.
+     * i18n value containing a quote or a closing-script-tag sequence cannot break out of this
+     * script context.
      *
      * @returns {string} the localized close-button label, or a safe default
      */
