@@ -190,7 +190,12 @@
                              to load (its static Safelist field) and the mutation/query unregistered.
                              Inlining jsoup (pure-JDK, no transitive deps) makes it bundle-private. -->
                         <Embed-Dependency>jsoup;inline=true</Embed-Dependency>
-                        <Import-Package>!org.jsoup.*,*</Import-Package>
+                        <!-- The view JSP calls the EL function jcr:getChildrenOfType, backed by
+                             org.jahia.taglibs.jcr.node.JCRTagUtils. bnd computes Import-Package from
+                             bytecode only and never scans JSPs, so this package must be imported
+                             explicitly or the compiled JSP servlet cannot resolve the TLD function
+                             class at render time (JasperException: JCRTagUtils not found). -->
+                        <Import-Package>!org.jsoup.*,org.jahia.taglibs.jcr.node,*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
