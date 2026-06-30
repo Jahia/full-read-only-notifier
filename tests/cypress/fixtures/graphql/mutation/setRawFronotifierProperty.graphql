@@ -1,0 +1,14 @@
+## Writes a node property DIRECTLY via the generic JCR mutation, bypassing the
+## FullReadOnlyNotifier GraphQL mutation (which sanitizes with Jsoup). This faithfully
+## reproduces the threat model of issue #19: content_on/content_off are plain (string)
+## JCR properties, so a direct JCR / jContent / import write stores UNSANITIZED markup
+## that the render layer must not trust.
+mutation SetRawFronotifierProperty($path: String!, $property: String!, $value: String!) {
+    jcr(workspace: EDIT) {
+        mutateNode(pathOrId: $path) {
+            mutateProperty(name: $property) {
+                setValue(value: $value)
+            }
+        }
+    }
+}

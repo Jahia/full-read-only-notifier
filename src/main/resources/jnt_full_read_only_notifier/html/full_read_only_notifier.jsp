@@ -9,6 +9,7 @@
 <%@ taglib prefix="query" uri="http://www.jahia.org/tags/queryLib" %>
 <%@ taglib prefix="utility" uri="http://www.jahia.org/tags/utilityLib" %>
 <%@ taglib prefix="s" uri="http://www.jahia.org/tags/search" %>
+<%@ taglib prefix="fro" uri="http://www.jahia.org/community/full-read-only-notifier/functions" %>
 <%--@elvariable id="currentNode" type="org.jahia.services.content.JCRNodeWrapper"--%>
 <%--@elvariable id="out" type="java.io.PrintWriter"--%>
 <%--@elvariable id="script" type="org.jahia.services.render.scripting.Script"--%>
@@ -75,10 +76,14 @@
      * Sanitize an HTML string by removing script elements, event-handler attributes,
      * javascript: href/src values, and data: URIs before any DOM injection.
      *
-     * IMPORTANT: This is a DEFENCE-IN-DEPTH (blocklist) measure only. The PRIMARY
-     * security control is the AUTHORITATIVE server-side sanitization applied at
-     * write-time in the GraphQL mutation, behind the siteAdminUsers permission.
-     * A blocklist can never be exhaustive; do not rely on this function alone.
+     * IMPORTANT: This is a DEFENCE-IN-DEPTH (blocklist) measure only — a blocklist can never
+     * be exhaustive, so do not rely on this function alone. The render layer applies two
+     * stronger controls BEFORE the value reaches here (see the fron-content-* divs below):
+     *   1. server-side ALLOWLIST sanitization (fro:sanitizeHtml, same Jsoup allowlist as the
+     *      GraphQL mutation) — applied on output, so it covers every write path including direct
+     *      JCR/jContent/import writes that bypass the mutation (the property is a plain string);
+     *   2. OUTPUT ENCODING: the value is emitted as HTML-escaped text and recovered via
+     *      .textContent, so nothing is parsed/executed during the initial page load.
      *
      * @param {string} html Raw HTML string from JCR
      * @returns {string} Sanitized HTML string (text content preserved, dangerous markup removed)
@@ -138,8 +143,18 @@
         return tmp.innerHTML;
     }
 
-    // Accessible name for the close button, resolved server-side from i18n bundle.
-    var FRO_CLOSE_LABEL = '<fmt:message key="full_read_only_notifier.close"/>';
+    /**
+     * Accessible name for the close button. Read from a server-rendered hidden element
+     * (#fro-close-label) via .textContent rather than emitted into a JS string literal, so an
+     * i18n value containing a quote or a closing-script-tag sequence cannot break out of this
+     * script context.
+     *
+     * @returns {string} the localized close-button label, or a safe default
+     */
+    function froGetCloseLabel() {
+        var el = document.getElementById('fro-close-label');
+        return (el && el.textContent) ? el.textContent : 'Close';
+    }
 
     /**
      * Display an inline notification banner above the page content.
@@ -192,8 +207,9 @@
         var close = document.createElement('button');
         close.setAttribute('type', 'button');
         close.innerHTML = '&times;';
-        close.setAttribute('aria-label', FRO_CLOSE_LABEL);
-        close.setAttribute('title', FRO_CLOSE_LABEL);
+        var closeLabel = froGetCloseLabel();
+        close.setAttribute('aria-label', closeLabel);
+        close.setAttribute('title', closeLabel);
         close.style.cssText = [
             'position:absolute',
             'top:8px',
@@ -225,6 +241,11 @@
     }
 </script>
 
+<%-- Close-button label, emitted as HTML-escaped text and read back via .textContent in JS
+     (see froGetCloseLabel) so the value never enters an executable JS/HTML context. --%>
+<fmt:message key="full_read_only_notifier.close" var="froCloseLabel"/>
+<span id="fro-close-label" style="display:none"><c:out value="${froCloseLabel}"/></span>
+
 <c:set var="siteNode" value="${renderContext.site}"/>
 <fmt:message key='full_read_only_notifier.on.notification' var="content_on"/>
 <fmt:message key='full_read_only_notifier.off.notification' var="content_off"/>
@@ -240,24 +261,33 @@
 
 <c:choose>
     <c:when test="${renderContext.readOnlyStatus eq 'OFF'}">
-        <div id="fron-content-off" style="display:none"><c:out value="${content_off}" escapeXml="false"/></div>
+        <%-- SECURITY (layered, against a hostile stored value — content_off is a plain (string)
+             JCR property, so a direct JCR/jContent/import write bypasses the mutation's sanitizer):
+               1. fro:sanitizeHtml applies the SAME server-side Jsoup allowlist as the mutation, so
+                  the value is allowlist-clean regardless of how it was written.
+               2. c:out (escapeXml defaults to true) emits it as inert escaped TEXT, so nothing is
+                  parsed/executed on initial page load.
+               3. the JS below recovers it via .textContent and runs froSanitize() (defence-in-depth)
+                  before injecting it into the banner. --%>
+        <div id="fron-content-off" style="display:none"><c:out value="${fro:sanitizeHtml(content_off)}"/></div>
         <script type="text/javascript">
             document.addEventListener('DOMContentLoaded', function () {
                 var cookie = getCookie('full_read_only');
                 if (cookie !== null) {
-                    froShowNotification(document.getElementById('fron-content-off').innerHTML);
+                    froShowNotification(document.getElementById('fron-content-off').textContent);
                     removeCookie('full_read_only');
                 }
             });
         </script>
     </c:when>
     <c:otherwise>
-        <div id="fron-content-on" style="display:none"><c:out value="${content_on}" escapeXml="false"/></div>
+        <%-- SECURITY: see the "off" branch above — server allowlist + escaped text + froSanitize. --%>
+        <div id="fron-content-on" style="display:none"><c:out value="${fro:sanitizeHtml(content_on)}"/></div>
         <script type="text/javascript">
             document.addEventListener('DOMContentLoaded', function () {
                 var cookie = getCookie('full_read_only');
                 if (cookie === null) {
-                    froShowNotification(document.getElementById('fron-content-on').innerHTML);
+                    froShowNotification(document.getElementById('fron-content-on').textContent);
                     setCookie('full_read_only', 'Y', 1);
                 }
             });

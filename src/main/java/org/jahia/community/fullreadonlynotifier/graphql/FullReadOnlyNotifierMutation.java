@@ -4,12 +4,11 @@ import graphql.annotations.annotationTypes.GraphQLDescription;
 import graphql.annotations.annotationTypes.GraphQLField;
 import graphql.annotations.annotationTypes.GraphQLName;
 import graphql.annotations.annotationTypes.GraphQLNonNull;
+import org.jahia.community.fullreadonlynotifier.util.FronotifierHtmlSanitizer;
 import org.jahia.modules.graphql.provider.dxm.security.GraphQLRequiresPermission;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.content.JCRTemplate;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,23 +22,6 @@ public class FullReadOnlyNotifierMutation {
     private static final Logger logger = LoggerFactory.getLogger(FullReadOnlyNotifierMutation.class);
 
     /**
-     * Jsoup allowlist for admin-authored rich-text HTML.
-     *
-     * <p>Permits the tags and attributes produced by CKEditor5 for standard rich-text
-     * formatting (headings, bold, italic, lists, links, images) while stripping any
-     * executable content (script, style with expressions, on* event handlers, javascript:
-     * href values, etc.).
-     *
-     * <p>Security note: this is a server-side, write-time control. The JSP rendering layer
-     * applies an additional output-side escape as a defence-in-depth measure. Both controls
-     * must be maintained independently.
-     */
-    private static final Safelist RICH_TEXT_SAFELIST = Safelist.relaxed()
-            .addTags("s", "u")
-            .addAttributes("*", "class", "style")
-            .addAttributes("a", "target", "rel");
-
-    /**
      * Updates the Full Read-Only Notifier settings for the given site.
      *
      * <p>Both {@code contentOff} and {@code contentOn} are admin-authored rich-text HTML
@@ -48,9 +30,10 @@ public class FullReadOnlyNotifierMutation {
      * <ol>
      *   <li>Checked against a {@value FronotifierConstants#CONTENT_MAX_LENGTH}-byte length
      *       limit to prevent oversized JCR property writes.</li>
-     *   <li>Sanitized with a Jsoup allowlist ({@link Safelist#relaxed()} plus {@code class},
-     *       {@code style}, {@code target}, {@code rel} attributes) to strip executable content
-     *       such as {@code <script>}, inline event handlers, and {@code javascript:} hrefs.</li>
+     *   <li>Sanitized with the shared {@link FronotifierHtmlSanitizer} Jsoup allowlist to strip
+     *       executable content such as {@code <script>}, inline event handlers, and
+     *       {@code javascript:} hrefs. The same allowlist is applied again at render time, so the
+     *       value is also safe if it reaches the node by a write path that bypasses this mutation.</li>
      * </ol>
      *
      * <p>Requires the {@code siteAdminUsers} permission on the target site.
@@ -138,6 +121,6 @@ public class FullReadOnlyNotifierMutation {
                     fieldName + " exceeds maximum allowed length of "
                     + FronotifierConstants.CONTENT_MAX_LENGTH + " bytes");
         }
-        return Jsoup.clean(content, RICH_TEXT_SAFELIST);
+        return FronotifierHtmlSanitizer.sanitize(content);
     }
 }
