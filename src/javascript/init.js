@@ -7,7 +7,7 @@ export default function () {
 
     registry.add('adminRoute', 'fullReadOnlyNotifierManager', {
         targets: ['administration-sites:10'],
-        requiredPermission: 'siteAdminUsers',
+        requiredPermission: 'siteAdminFullReadOnlyNotifier',
         requireModuleInstalledOnSite: 'full-read-only-notifier',
         label: 'full-read-only-notifier:label',
         isSelectable: true,

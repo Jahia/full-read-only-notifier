@@ -21,6 +21,23 @@ final class FronotifierConstants {
     static final String FRONOTIFIER_NODE_TYPE = "jnt:fronotifier";
 
     /**
+     * Permission required to read or update the notifier settings of a site.
+     *
+     * <p>Defined by this module in {@code src/main/import/permissions.xml} as a child of the
+     * core {@code site-admin} permission node. Because Jahia's built-in
+     * {@code site-administrator} role grants the {@code site-admin} umbrella permission (and,
+     * by permission-tree inheritance, all permissions nested beneath it), this permission is
+     * automatically held by site administrators on their own site node — with no extra role
+     * provisioning.
+     *
+     * <p>It MUST be checked on the target site node ({@code /sites/<siteKey>}), never on the
+     * repository root, which is why the resolvers use {@link FronotifierPermissionChecker}
+     * instead of the DXM {@code @GraphQLRequiresPermission} annotation (the latter evaluates
+     * against the root node and so denies every non-server-level administrator).
+     */
+    static final String PERMISSION_SITE_ADMIN = "siteAdminFullReadOnlyNotifier";
+
+    /**
      * JCR property for the HTML message displayed when full-read-only mode is OFF
      * (i.e. the site has returned to normal writable operation).
      * The name "off" refers to the read-only feature being disabled — the site is writable.

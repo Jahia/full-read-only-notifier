@@ -4,7 +4,6 @@ import graphql.annotations.annotationTypes.GraphQLDescription;
 import graphql.annotations.annotationTypes.GraphQLField;
 import graphql.annotations.annotationTypes.GraphQLName;
 import graphql.annotations.annotationTypes.GraphQLNonNull;
-import org.jahia.modules.graphql.provider.dxm.security.GraphQLRequiresPermission;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.content.JCRTemplate;
@@ -29,22 +28,26 @@ public class FullReadOnlyNotifierQuery {
      * auto-creation is the exclusive responsibility of
      * {@code FullReadOnlyNotifierMutation#updateFronotifierSettings}.
      *
-     * <p>Requires the {@code siteAdminUsers} permission on the target site.
+     * <p>Requires the {@link FronotifierConstants#PERMISSION_SITE_ADMIN} permission on the
+     * target site, enforced by {@link FronotifierPermissionChecker} against the site node with
+     * the current user's session (not the DXM {@code @GraphQLRequiresPermission} annotation,
+     * which checks the repository root and would deny non-server-level administrators).
      *
      * @param siteKey the site key; must match {@code [A-Za-z0-9_-]{1,150}}
      * @return the current settings, or a default {@code GqlFronotifierSettings("", "")} when
      *         the settings node or the site node is absent
      * @throws RepositoryException if an unexpected JCR error occurs (not a missing node)
      * @throws IllegalArgumentException if {@code siteKey} fails the format validation
+     * @throws FronotifierAccessDeniedException if the current user lacks the required permission
      */
     @GraphQLField
     @GraphQLName("settings")
     @GraphQLNonNull
     @GraphQLDescription("Get the Full Read-Only Notifier settings for a site")
-    @GraphQLRequiresPermission("siteAdminUsers")
     public GqlFronotifierSettings getFronotifierSettings(
             @GraphQLName("siteKey") @GraphQLNonNull String siteKey) throws RepositoryException {
         final String safeSiteKey = FronotifierConstants.requireValidSiteKey(siteKey);
+        FronotifierPermissionChecker.requireSiteAdmin(safeSiteKey);
         return JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, "default", null,
                 session -> readSettings(session, safeSiteKey));
     }

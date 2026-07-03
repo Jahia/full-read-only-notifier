@@ -5,7 +5,6 @@ import graphql.annotations.annotationTypes.GraphQLField;
 import graphql.annotations.annotationTypes.GraphQLName;
 import graphql.annotations.annotationTypes.GraphQLNonNull;
 import org.jahia.community.fullreadonlynotifier.util.FronotifierHtmlSanitizer;
-import org.jahia.modules.graphql.provider.dxm.security.GraphQLRequiresPermission;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.content.JCRTemplate;
@@ -36,7 +35,10 @@ public class FullReadOnlyNotifierMutation {
      *       value is also safe if it reaches the node by a write path that bypasses this mutation.</li>
      * </ol>
      *
-     * <p>Requires the {@code siteAdminUsers} permission on the target site.
+     * <p>Requires the {@link FronotifierConstants#PERMISSION_SITE_ADMIN} permission on the
+     * target site, enforced by {@link FronotifierPermissionChecker} against the site node with
+     * the current user's session (not the DXM {@code @GraphQLRequiresPermission} annotation,
+     * which checks the repository root and would deny non-server-level administrators).
      *
      * @param siteKey    the site key; must match {@code [A-Za-z0-9_-]{1,150}}
      * @param contentOff HTML message shown when full-read-only mode is OFF (site is writable)
@@ -46,17 +48,18 @@ public class FullReadOnlyNotifierMutation {
      * @throws IllegalArgumentException if {@code siteKey} fails format validation or either
      *                                  content field exceeds the maximum length
      * @throws IllegalStateException    if the target site node does not exist in JCR
+     * @throws FronotifierAccessDeniedException if the current user lacks the required permission
      */
     @GraphQLField
     @GraphQLName("updateSettings")
     @GraphQLNonNull
     @GraphQLDescription("Update the Full Read-Only Notifier settings for a site")
-    @GraphQLRequiresPermission("siteAdminUsers")
     public boolean updateFronotifierSettings(
             @GraphQLName("siteKey") @GraphQLNonNull String siteKey,
             @GraphQLName("contentOff") @GraphQLNonNull String contentOff,
             @GraphQLName("contentOn") @GraphQLNonNull String contentOn) throws RepositoryException {
         final String safeSiteKey = FronotifierConstants.requireValidSiteKey(siteKey);
+        FronotifierPermissionChecker.requireSiteAdmin(safeSiteKey);
         final String safeContentOff = sanitizeContent(contentOff, "contentOff");
         final String safeContentOn = sanitizeContent(contentOn, "contentOn");
         return JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(null, "default", null,
