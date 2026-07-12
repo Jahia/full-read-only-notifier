@@ -114,7 +114,11 @@
         <dependency>
             <!-- jsoup: HTML allowlist sanitizer used by FullReadOnlyNotifierMutationExtension
                  to strip unsafe tags/attributes from admin-authored rich-text before JCR storage.
-                 Jahia ships jsoup in its core OSGi runtime; provided scope keeps it off the bundle classpath. -->
+                 Compile scope (the default) is REQUIRED: Jahia does not export org.jsoup as an
+                 OSGi package, so jsoup is embedded bundle-private via the maven-bundle-plugin's
+                 Embed-Dependency instruction below. Do NOT switch this to provided scope — a
+                 provided dependency is silently excluded from Embed-Dependency and the bundle
+                 would fail at runtime (see BundlePackagingTest). -->
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.18.1</version>
