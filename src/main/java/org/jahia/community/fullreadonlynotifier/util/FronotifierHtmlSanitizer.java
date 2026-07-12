@@ -25,10 +25,20 @@ import org.jsoup.safety.Safelist;
  */
 public final class FronotifierHtmlSanitizer {
 
-    /** Allowlist of tags/attributes considered safe for admin-authored rich text. */
+    /**
+     * Allowlist of tags/attributes considered safe for admin-authored rich text.
+     *
+     * <p>Note: jsoup's all-tags pseudo-tag is {@code ":all"} (a literal {@code "*"} only
+     * matches a tag actually named {@code *}, which never occurs, and was a silent no-op
+     * here until fixed). {@code class}/{@code style} are therefore allowed on every element,
+     * per the documented allowlist (README "Known Limitations"). The visitor-facing banner
+     * additionally strips {@code style} client-side ({@code froSanitize()} in the view JSP)
+     * before {@code innerHTML} injection, so inline styles are stored/round-tripped for the
+     * admin editor but do not reach the public banner DOM.
+     */
     private static final Safelist RICH_TEXT_SAFELIST = Safelist.relaxed()
             .addTags("s", "u")
-            .addAttributes("*", "class", "style")
+            .addAttributes(":all", "class", "style")
             .addAttributes("a", "target", "rel");
 
     private FronotifierHtmlSanitizer() {

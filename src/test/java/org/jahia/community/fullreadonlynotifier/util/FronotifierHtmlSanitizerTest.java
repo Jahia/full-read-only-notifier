@@ -57,7 +57,7 @@ public class FronotifierHtmlSanitizerTest {
     // ------------------------------------------------------------------
     // U6 — the allowlist deliberately extends Safelist.relaxed():
     //   .addTags("s", "u")                       (CKEditor Strikethrough/Underline)
-    //   .addAttributes("*", "class", "style")
+    //   .addAttributes(":all", "class", "style")
     //   .addAttributes("a", "target", "rel")
     // These cases pin each addition individually, so silently dropping any of
     // them (e.g. removing .addTags("s","u")) is caught by a failing test.
@@ -80,27 +80,25 @@ public class FronotifierHtmlSanitizerTest {
     }
 
     /**
-     * CHARACTERIZATION TEST — documents CURRENT (buggy) behavior, NOT the intended contract.
+     * Pins the fixed U6 contract: {@code class} and {@code style} are allowed on every
+     * element via {@code .addAttributes(":all", "class", "style")} — jsoup's all-tags
+     * pseudo-tag is {@code ":all"}, not {@code "*"} (the original {@code "*"} was a silent
+     * no-op that stripped both attributes, e.g. CKEditor's Alignment plugin output
+     * {@code style="text-align:center"} was lost at save time).
      *
-     * <p>The production allowlist calls {@code .addAttributes("*", "class", "style")}, but
-     * jsoup's all-tags pseudo-tag is {@code ":all"}, not {@code "*"} (a literal {@code "*"}
-     * only ever matches a tag actually named {@code *}, which never occurs). The intended
-     * "class/style allowed on every element" rule is therefore a silent no-op and BOTH
-     * attributes are stripped today — e.g. CKEditor's Alignment plugin output
-     * ({@code style="text-align:center"}) is silently lost at save time.
-     *
-     * <p><strong>Stage 7 handoff:</strong> when the sanitizer is fixed (replace {@code "*"}
-     * with {@code ":all"}), this test MUST be inverted to assert both attributes are
-     * preserved. Do not delete it — repoint it at the fixed contract.
+     * <p>Security note: the visitor-facing banner still strips {@code style} client-side
+     * ({@code froSanitize()} in the view JSP) before {@code innerHTML} injection, so
+     * allowing it here restores storage/round-trip per the documented allowlist without
+     * exposing the public banner DOM to CSS-based vectors.
      */
     @Test
-    public void sanitize_classAndStyleAttributes_currentlyStripped_documentsWildcardPseudoTagBug() {
+    public void sanitize_classAndStyleAttributes_arePreservedOnAnyElement() {
         String result = FronotifierHtmlSanitizer.sanitize(
                 "<p class=\"notice\" style=\"color:red\">styled</p>");
-        assertFalse("CURRENT BUG: class is stripped because \"*\" is not jsoup's all-tags "
-                + "pseudo-tag (\":all\" is)", result.contains("class="));
-        assertFalse("CURRENT BUG: style is stripped because \"*\" is not jsoup's all-tags "
-                + "pseudo-tag (\":all\" is)", result.contains("style="));
+        assertTrue("class must be preserved on any element (\":all\" pseudo-tag)",
+                result.contains("class=\"notice\""));
+        assertTrue("style must be preserved on any element (\":all\" pseudo-tag)",
+                result.contains("style=\"color:red\""));
         assertTrue("text content is still preserved", result.contains("styled"));
     }
 
