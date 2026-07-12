@@ -42,9 +42,10 @@ export const enableReadOnly = (): void => setFullReadOnly(true);
 export const disableReadOnly = (): void => setFullReadOnly(false);
 
 /**
- * Toggles Jahia PARTIAL read-only mode (readOnlyMode, not fullReadOnlyMode) — used to
- * put the server into a read-only-ish state that is driven by a different switch than
- * the "full" one the module's docs describe (see U9 spec).
+ * Toggles Jahia's LEGACY partial read-only mode (readOnlyMode, not fullReadOnlyMode).
+ * Stage 6 verified empirically that this switch does NOT feed
+ * renderContext.readOnlyStatus (only the full read-only controller writes it) — it
+ * merely blocks edit/contribute/studio/administration. See the 09 spec.
  */
 export function setPartialReadOnly(enabled: boolean): void {
     cy.request({
