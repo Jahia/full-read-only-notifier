@@ -218,6 +218,39 @@ describe('Full Read-Only Notifier Popup', () => {
         disableReadOnly()
     })
 
+    // -----------------------------------------------------------------------
+    // D3 — the dedupe cookie is NOT a session cookie: the JSP's
+    // setCookie('full_read_only', 'Y', 1) call produces a persistent cookie with a
+    // fixed ~1-day expiry, path=/, SameSite=Strict, conditionally Secure (HTTPS only)
+    // and no HttpOnly (the page's own JS must read it back). The docs' "session
+    // cookie" framing is wrong; this pins the real attributes.
+    // -----------------------------------------------------------------------
+
+    it('sets a persistent ~1-day cookie (path=/, SameSite=Strict, JS-readable), not a session cookie', () => {
+        enableReadOnly();
+        cy.visit(WEBSITE_PATH);
+        cy.get(BANNER).should('be.visible');
+
+        cy.getCookie(COOKIE_NAME).then(cookie => {
+            expect(cookie, 'cookie must exist').to.not.be.null;
+            expect(cookie.value).to.eq('Y');
+            expect(cookie.path, 'path').to.eq('/');
+            expect(String(cookie.sameSite).toLowerCase(), 'SameSite').to.eq('strict');
+            // Must stay JS-readable: the JSP itself reads it back via document.cookie
+            expect(cookie.httpOnly, 'HttpOnly').to.eq(false);
+            // The harness runs over plain HTTP, so the conditional Secure flag is off
+            expect(cookie.secure, 'Secure (conditional, off over http)').to.eq(false);
+            // Persistent (has an expiry) — a true session cookie would have none —
+            // and the expiry is ~24h out (setCookie(..., 1) => 1 day)
+            expect(cookie.expiry, 'expiry must be set (persistent cookie)').to.be.a('number');
+            const nowSeconds = Date.now() / 1000;
+            expect(cookie.expiry).to.be.greaterThan(nowSeconds + (23 * 3600));
+            expect(cookie.expiry).to.be.lessThan(nowSeconds + (25 * 3600));
+        });
+
+        disableReadOnly();
+    });
+
     it('does not repeat the "on" notification on subsequent visits during read-only mode', () => {
         enableReadOnly()
 
