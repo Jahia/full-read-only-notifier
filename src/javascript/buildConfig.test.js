@@ -9,8 +9,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// webpack.config.js lives at the repo root (outside jest's roots — requiring it at
-// runtime is fine, roots only gates test discovery).
+// Note: webpack.config.js lives at the repo root (outside jest's roots — requiring it
+// at runtime is fine, roots only gates test discovery).
 const webpackConfigFactory = require('../../webpack.config');
 
 const resolveConfig = () => webpackConfigFactory({}, {mode: 'production'});
