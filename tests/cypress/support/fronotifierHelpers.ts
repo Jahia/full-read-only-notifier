@@ -13,16 +13,11 @@ export const COOKIE_NAME = 'full_read_only';
 export const BANNER = '[id="froBanner"]';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
-export const updateFronotifierSettings: DocumentNode =
-    require('graphql-tag/loader!../fixtures/graphql/mutation/updateFronotifierSettings.graphql');
-export const getFronotifierSettings: DocumentNode =
-    require('graphql-tag/loader!../fixtures/graphql/query/getFronotifierSettings.graphql');
-export const addFronotifierComponent: DocumentNode =
-    require('graphql-tag/loader!../fixtures/graphql/mutation/addFronotifierComponent.graphql');
-export const deleteNode: DocumentNode =
-    require('graphql-tag/loader!../fixtures/graphql/mutation/deleteNode.graphql');
-export const publishNode: DocumentNode =
-    require('graphql-tag/loader!../fixtures/graphql/mutation/publishNode.graphql');
+export const updateFronotifierSettings: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/updateFronotifierSettings.graphql');
+export const getFronotifierSettings: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/query/getFronotifierSettings.graphql');
+export const addFronotifierComponent: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/addFronotifierComponent.graphql');
+export const deleteNode: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/deleteNode.graphql');
+export const publishNode: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/publishNode.graphql');
 /* eslint-enable @typescript-eslint/no-var-requires */
 
 /**
@@ -116,10 +111,12 @@ export function removeAndPublishComponent(componentName: string): void {
 }
 
 /** Raw (non-Apollo) GraphQL POST as root — used to probe schema shape and workspaces. */
-export function rawGraphQl(query: string): Cypress.Chainable<Cypress.Response<{
-    data?: Record<string, unknown> | null;
-    errors?: Array<{message: string}>;
-}>> {
+export function rawGraphQl(query: string): Cypress.Chainable<
+    Cypress.Response<{
+        data?: Record<string, unknown> | null
+        errors?: Array<{ message: string }>
+    }>
+> {
     return cy.request({
         method: 'POST',
         url: '/modules/graphql',
