@@ -4,7 +4,7 @@ Jahia OSGi **site-level** module that lets site admins configure an HTML message
 
 ## Key Facts
 
-- **artifactId**: `full-read-only-notifier` | **version**: `2.0.3-SNAPSHOT`
+- **artifactId**: `full-read-only-notifier` | **version**: `2.0.5-SNAPSHOT`
 - **Java package**: `org.jahia.community.fullreadonlynotifier`
 - **jahia-depends**: `default,siteSettings,graphql-dxm-provider,richtext-ckeditor5`
 - No Spring/Blueprint — pure OSGi DS
