@@ -53,7 +53,7 @@ yarn install
 ./ci.build.sh && ./ci.startup.sh
 ```
 
-- Tests: `tests/cypress/e2e/01-fullReadOnlyNotifier.cy.ts`
+- Tests: `tests/cypress/e2e/01-fronotifierSettings.cy.ts` … `10-fronotifierBannerA11y.cy.ts` (10 numbered specs: settings UI/API, popup + cookie attributes, XSS regression, permission scope, default messages, edit-mode label, auto-publish, GraphQL schema shape, non-OFF banner branch, banner a11y — inventory pinned by `src/javascript/cypressSpecInventory.test.js`)
 - Admin path: `/jahia/administration/{siteKey}/fullReadOnlyNotifierManager`
 
 ## Gotchas
