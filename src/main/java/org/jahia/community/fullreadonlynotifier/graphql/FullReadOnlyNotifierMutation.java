@@ -21,6 +21,19 @@ public class FullReadOnlyNotifierMutation {
     private static final Logger logger = LoggerFactory.getLogger(FullReadOnlyNotifierMutation.class);
 
     /**
+     * Serializes the {@code hasNode → addNode → setProperty → save()} sequence in
+     * {@link #writeSettings}, closing the check-then-act race where two concurrent first
+     * writes for the same site both observe {@code hasNode() == false} and both call
+     * {@code addNode(...)} (duplicate node or {@code ItemExistsException} at save).
+     *
+     * <p>A single JVM-wide lock is deliberate (KISS): settings writes are rare, admin-only
+     * operations, so per-site lock striping is not warranted. Note this guards a single JVM
+     * only — in a Jahia cluster two different nodes could still race; acceptable for this
+     * admin-only, idempotent-after-creation write.
+     */
+    private static final Object SETTINGS_WRITE_LOCK = new Object();
+
+    /**
      * Updates the Full Read-Only Notifier settings for the given site.
      *
      * <p>Both {@code contentOff} and {@code contentOn} are admin-authored rich-text HTML
@@ -74,6 +87,10 @@ public class FullReadOnlyNotifierMutation {
      * {@code @Reference}-injected service field to make the full call path testable without
      * this seam. Deferred to avoid a larger service-layer rearchitecture at this time.
      *
+     * <p>Concurrency: the settings-node check-create-save sequence is serialized by
+     * {@link #SETTINGS_WRITE_LOCK}, so concurrent first writes create the {@code fronotifier}
+     * node exactly once and the later writer updates the winner's node.
+     *
      * @param session        an open JCR session
      * @param safeSiteKey    a pre-validated site key
      * @param safeContentOff pre-sanitized HTML for the "off" state
@@ -92,16 +109,18 @@ public class FullReadOnlyNotifierMutation {
             throw new IllegalStateException("Site not found: " + safeSiteKey, e);
         }
 
-        final JCRNodeWrapper froNode;
-        if (siteNode.hasNode(FronotifierConstants.FRONOTIFIER)) {
-            froNode = siteNode.getNode(FronotifierConstants.FRONOTIFIER);
-        } else {
-            froNode = siteNode.addNode(FronotifierConstants.FRONOTIFIER,
-                    FronotifierConstants.FRONOTIFIER_NODE_TYPE);
+        synchronized (SETTINGS_WRITE_LOCK) {
+            final JCRNodeWrapper froNode;
+            if (siteNode.hasNode(FronotifierConstants.FRONOTIFIER)) {
+                froNode = siteNode.getNode(FronotifierConstants.FRONOTIFIER);
+            } else {
+                froNode = siteNode.addNode(FronotifierConstants.FRONOTIFIER,
+                        FronotifierConstants.FRONOTIFIER_NODE_TYPE);
+            }
+            froNode.setProperty(FronotifierConstants.PROP_CONTENT_OFF, safeContentOff);
+            froNode.setProperty(FronotifierConstants.PROP_CONTENT_ON, safeContentOn);
+            session.save();
         }
-        froNode.setProperty(FronotifierConstants.PROP_CONTENT_OFF, safeContentOff);
-        froNode.setProperty(FronotifierConstants.PROP_CONTENT_ON, safeContentOn);
-        session.save();
         return Boolean.TRUE;
     }
 
