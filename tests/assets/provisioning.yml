@@ -32,4 +32,17 @@
 - importSite: "jar:mvn:org.jahia.modules/digitall/RELEASE/zip/import!/Digitall.zip"
 - karafCommand: "log:log 'END - Import Digitall site'"
 
+# Open the API security profile so raw (stateless basic-auth) GraphQL requests from the
+# specs can reach the jcr namespace and schema introspection. Under the default profile
+# those requests fail with "Permission denied" on the jcr field (no ui scope is applied
+# to backend cy.request calls), while cy.apollo browser requests pass — an auth-context
+# asymmetry, not a module bug.
+# PLACEMENT MATTERS: this must run AFTER the site imports above. When the open profile
+# is deployed earlier, the provisioning API itself loses the importSite operation
+# ("No permission to execute provisioning operation of type importSite") and the
+# Digitall import silently never happens, failing the whole suite.
+# NOTE: the PID is deliberately WITHOUT the .cfg suffix — with the suffix the command
+# silently no-ops.
+- karafCommand: "config:property-set -p org.jahia.bundles.api.security security.profile open"
+
 - karafCommand: "log:log 'END - provisioning'"
