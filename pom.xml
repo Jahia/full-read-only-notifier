@@ -121,7 +121,7 @@
                  would fail at runtime (see BundlePackagingTest). -->
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.18.1</version>
+            <version>1.23.2</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -150,7 +150,7 @@
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.15.0</version>
+                <version>1.15.4</version>
                 <executions>
                     <execution>
                         <id>npm install node and yarn</id>
@@ -159,8 +159,8 @@
                             <goal>install-node-and-yarn</goal>
                         </goals>
                         <configuration>
-                            <nodeVersion>v22.6.0</nodeVersion>
-                            <yarnVersion>v1.22.21</yarnVersion>
+                            <nodeVersion>v22.20.0</nodeVersion>
+                            <yarnVersion>v1.22.22</yarnVersion>
                         </configuration>
                     </execution>
                     <execution>
