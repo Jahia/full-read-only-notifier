@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.2",
-    "@ckeditor/ckeditor5-react": "^11.1.0",
+    "@ckeditor/ckeditor5-react": "^12.0.0",
     "@jahia/moonstone": "^2.21.1",
     "@jahia/ui-extender": "^1.1.0",
     "graphql": "^15.10.3",
@@ -82,12 +82,12 @@
     "sass": "^1.107.1",
     "sass-loader": "^17.1.0",
     "style-loader": "^4.0.0",
-    "stylelint": "^17.16.0",
+    "stylelint": "^18.0.0",
     "stylelint-config-css-modules": "^4.0.0",
     "stylelint-config-standard-scss": "^17.0.0",
     "stylelint-order": "^8.1.2",
     "webpack": "^5.112.2",
-    "webpack-bundle-analyzer": "^4.10.2",
+    "webpack-bundle-analyzer": "^5.4.1",
     "webpack-cli": "^7.3.1"
   }
 }
