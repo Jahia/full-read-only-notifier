@@ -46,6 +46,19 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # Majors skipped in 2026-11 (the @dependabot ignore comments were never acknowledged):
+      # ckeditor5-react 12 is a runtime major of the rich-text editor integration
+      - dependency-name: "@ckeditor/ckeditor5-react"
+        update-types: ["version-update:semver-major"]
+      # js-yaml 5 is a runtime major (API changes); stay on 4.x
+      - dependency-name: "js-yaml"
+        update-types: ["version-update:semver-major"]
+      # webpack-bundle-analyzer 5 breaks the jsdom test, which needs a source change first
+      - dependency-name: "webpack-bundle-analyzer"
+        update-types: ["version-update:semver-major"]
+      # stylelint 18 skipped (stylelint-config-standard-scss 17 peers stylelint ^17)
+      - dependency-name: "stylelint"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "npm"
     directory: "/tests"
