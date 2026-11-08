@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.2",
-    "@ckeditor/ckeditor5-react": "^11.1.0",
+    "@ckeditor/ckeditor5-react": "^11.2.0",
     "@jahia/moonstone": "^2.21.1",
     "@jahia/ui-extender": "^1.1.0",
     "graphql": "^15.10.3",
@@ -60,7 +60,7 @@
     "**/cacache/glob/minimatch": "^11.0.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.0",
+    "@babel/core": "^7.29.13",
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/preset-env": "^7.29.7",
     "@babel/preset-react": "^7.29.7",
