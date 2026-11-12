@@ -84,7 +84,7 @@
     "jest-environment-jsdom": "^30.5.2",
     "postcss-scss": "^4.0.2",
     "rimraf": "^6.1.4",
-    "sass": "^1.107.1",
+    "sass": "^1.108.1",
     "sass-loader": "^17.1.0",
     "style-loader": "^4.0.0",
     "stylelint": "^17.16.0",
